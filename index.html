@@ -44,10 +44,6 @@
             <button id="github-settings-btn" class="px-3 py-2 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-200 font-bold rounded-md shadow-sm transition border border-gray-300 dark:border-slate-500" title="GitHub Settings">
                 ⚙️ સેટિંગ્સ
             </button>
-            <button id="load-github-btn" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-md shadow-sm transition flex items-center gap-2 border border-transparent">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                <span>GitHub થી લોડ કરો</span>
-            </button>
             <button id="save-github-btn" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md shadow-sm transition flex items-center gap-2">
                 <span>☁️ સીધું GitHub પર સેવ કરો</span>
             </button>
@@ -70,7 +66,8 @@
                 <div class="text-xs text-gray-500 dark:text-slate-400 mt-2">સૂચના: કીર્તન નીચે આપેલ 'Live' કે 'Pending' બટન પર ક્લિક કરો.</div>
             </div>
             <div class="flex-grow overflow-y-auto p-3 flex flex-col gap-3" id="kirtan-list">
-                <div class="text-center text-gray-400 dark:text-slate-500 mt-10">GitHub પરથી ફાઇલ લોડ કરો.</div>
+                <!-- ઓટો લોડ માટેનું લખાણ -->
+                <div class="text-center text-gray-500 mt-10">કીર્તન લોડ થઈ રહ્યા છે...</div>
             </div>
         </div>
 
@@ -275,24 +272,41 @@
         const slideStatus = document.getElementById('slide-status');
 
 
-        // --- 3. GitHub API (Direct Load & Save) ---
-        let fileSha = ''; // ગિટહબ પર ફાઇલ અપડેટ કરવા માટે SHA જરૂરી છે
-
+        // --- 3. Auto-Load & GitHub API Save ---
         function utf8ToBase64(str) { return btoa(unescape(encodeURIComponent(str))); }
         function base64ToUtf8(str) { return decodeURIComponent(escape(atob(str))); }
 
+        // પેજ લોડ થતાં જ ઓટોમેટિક કીર્તનો લાવવા માટે
+        window.addEventListener('DOMContentLoaded', async () => {
+            try {
+                // cache busting ઉમેર્યું છે જેથી હંમેશા લેટેસ્ટ ફાઈલ જ લોડ થાય
+                const response = await fetch('kirtans.txt?t=' + new Date().getTime());
+                if(response.ok) {
+                    const text = await response.text();
+                    parseFile(text);
+                } else {
+                    throw new Error('File not found');
+                }
+            } catch(e) {
+                console.error(e);
+                listContainer.innerHTML = '<div class="text-center text-red-500 mt-10">kirtans.txt ફાઇલ મળી નથી.<br>ગિટહબ પર અપલોડ કરેલી છે કે નહીં તે ચકાસો.</div>';
+            }
+        });
+
+        // સેટિંગ્સ માટે
         document.getElementById('github-settings-btn').addEventListener('click', () => {
-            const user = prompt("તમારું GitHub Username નાખો:", localStorage.getItem('gh_user') || '');
-            const repo = prompt("તમારા Repository નું નામ નાખો:", localStorage.getItem('gh_repo') || '');
+            const user = prompt("તમારું GitHub Username નાખો (દા.ત. rahul123):", localStorage.getItem('gh_user') || '');
+            const repo = prompt("તમારા Repository નું નામ નાખો (દા.ત. kirtan-controller):", localStorage.getItem('gh_repo') || '');
             const token = prompt("તમારો GitHub Personal Access Token (PAT) નાખો:\n(આ તમારા જ બ્રાઉઝરમાં સુરક્ષિત રહેશે)", localStorage.getItem('gh_token') || '');
             
-            if(user !== null) localStorage.setItem('gh_user', user);
-            if(repo !== null) localStorage.setItem('gh_repo', repo);
-            if(token !== null) localStorage.setItem('gh_token', token);
+            if(user !== null) localStorage.setItem('gh_user', user.trim());
+            if(repo !== null) localStorage.setItem('gh_repo', repo.trim());
+            if(token !== null) localStorage.setItem('gh_token', token.trim());
             alert('સેટિંગ્સ સેવ થઈ ગયા છે!');
         });
 
-        document.getElementById('load-github-btn').addEventListener('click', async () => {
+        // ગિટહબ પર સીધું સેવ કરવાનું ફંક્શન
+        document.getElementById('save-github-btn').addEventListener('click', async () => {
             const ghUser = localStorage.getItem('gh_user');
             const ghRepo = localStorage.getItem('gh_repo');
             const ghToken = localStorage.getItem('gh_token');
@@ -300,42 +314,9 @@
             if(!ghUser || !ghRepo || !ghToken) {
                 alert('કૃપા કરીને પહેલા "⚙️ સેટિંગ્સ" માં જઈને ગિટહબની માહિતી ભરો.'); return;
             }
-
-            const btn = document.getElementById('load-github-btn');
-            const originalText = btn.innerHTML;
-            btn.innerHTML = 'લોડ થઈ રહ્યું છે...';
             
-            try {
-                const url = `https://api.github.com/repos/${ghUser}/${ghRepo}/contents/kirtans.txt`;
-                const response = await fetch(url, {
-                    headers: { 'Authorization': `token ${ghToken}` }
-                });
-                
-                if (!response.ok) throw new Error('File not found or bad token');
-                
-                const data = await response.json();
-                fileSha = data.sha; 
-                const text = base64ToUtf8(data.content);
-                
-                parseFile(text);
-                
-                btn.innerHTML = '✓ લોડ થઈ ગયું!';
-                btn.classList.replace('bg-emerald-600', 'bg-emerald-500');
-                setTimeout(() => { btn.innerHTML = originalText; btn.classList.replace('bg-emerald-500', 'bg-emerald-600'); }, 2000);
-            } catch (error) { 
-                console.error(error);
-                alert('ભૂલ આવી! સેટિંગ્સમાં Token અને Username બરાબર છે કે નહીં તે ચકાસો.');
-                btn.innerHTML = originalText;
-            }
-        });
-
-        document.getElementById('save-github-btn').addEventListener('click', async () => {
-            const ghUser = localStorage.getItem('gh_user');
-            const ghRepo = localStorage.getItem('gh_repo');
-            const ghToken = localStorage.getItem('gh_token');
-            
-            if (parsedKirtans.length === 0 || !fileSha) {
-                alert('પહેલા ગિટહબ પરથી ફાઈલ લોડ કરો!'); return;
+            if (parsedKirtans.length === 0) {
+                alert('કોઈ કીર્તન સેવ કરવા માટે નથી!'); return;
             }
             
             if (liveIndex !== -1) {
@@ -352,15 +333,22 @@
             
             try {
                 const url = `https://api.github.com/repos/${ghUser}/${ghRepo}/contents/kirtans.txt`;
-                const contentB64 = utf8ToBase64(outputStr);
                 
+                // 1. ફાઇલનો લેટેસ્ટ SHA મેળવો
+                const getRes = await fetch(url, { headers: { 'Authorization': `token ${ghToken}` } });
+                if (!getRes.ok) throw new Error('ગિટહબ સાથે કનેક્ટ થઈ શક્યું નથી. ચેક કરો કે Repo નામ અને Token સાચા છે.');
+                const getData = await getRes.json();
+                const currentSha = getData.sha;
+
+                // 2. નવી ફાઇલ અપલોડ કરો
+                const contentB64 = utf8ToBase64(outputStr);
                 const body = {
                     message: 'Kirtan Controller દ્વારા કીર્તન અપડેટ કર્યા',
                     content: contentB64,
-                    sha: fileSha
+                    sha: currentSha
                 };
                 
-                const response = await fetch(url, {
+                const putRes = await fetch(url, {
                     method: 'PUT',
                     headers: {
                         'Authorization': `token ${ghToken}`,
@@ -369,17 +357,14 @@
                     body: JSON.stringify(body)
                 });
                 
-                if (!response.ok) throw new Error('Failed to save');
-                
-                const data = await response.json();
-                fileSha = data.content.sha; 
+                if (!putRes.ok) throw new Error('સેવ કરવામાં ભૂલ આવી.');
                 
                 btn.innerHTML = "✓ ગિટહબ પર સેવ થઈ ગયું!";
                 btn.classList.replace('bg-blue-600', 'bg-green-600');
                 setTimeout(() => { btn.innerHTML = originalText; btn.classList.replace('bg-green-600', 'bg-blue-600'); }, 2000);
             } catch (error) {
                 console.error(error);
-                alert('સેવ કરવામાં ભૂલ આવી.');
+                alert(error.message);
                 btn.innerHTML = originalText;
             }
         });
