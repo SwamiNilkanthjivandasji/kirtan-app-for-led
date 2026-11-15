@@ -290,14 +290,6 @@ dialog::backdrop{background:rgba(10,10,15,.55);backdrop-filter:blur(2px)}
   <dialog id="dlg-set"><div class="dlg-card">
     <div class="dlg-h"><span class="grow">સેટિંગ્સ</span></div>
     <div class="dlg-b">
-      <div class="sec-t">GitHub (ઓટોમેટિક સેવ)</div>
-      <div class="row2"><div><label for="gh-user">GitHub Username</label><input type="text" id="gh-user" autocomplete="off"></div><div><label for="gh-repo">Repository</label><input type="text" id="gh-repo" autocomplete="off"></div></div>
-      <div class="row2"><div><label for="gh-branch">Branch (ખાલી = default)</label><input type="text" id="gh-branch" autocomplete="off" placeholder="main"></div><div><label for="gh-path">ફાઇલનો path</label><input type="text" id="gh-path" autocomplete="off" placeholder="kirtans.txt"></div></div>
-      <label for="gh-token">Personal Access Token</label><input type="password" id="gh-token" autocomplete="off">
-      <div class="hint">સુરક્ષા માટે <b>Fine-grained token</b> બનાવો: ફક્ત આ એક repository, અને ફક્ત <b>Contents → Read and write</b>. ટોકન આ બ્રાઉઝરમાં જ સચવાય છે.</div>
-      <div style="display:flex;gap:10px;align-items:center;margin-top:8px"><button id="gh-test" class="btn btn-ghost btn-sm">કનેક્શન ચકાસો</button><span class="hint" id="gh-result"></span></div>
-      <label class="opt" style="margin-top:6px"><span class="switch"><input type="checkbox" id="st-auto"><i></i></span><div>ફેરફાર ઓટોમેટિક GitHub પર સેવ કરો<span class="d">એડિટ પછી થોડી સેકન્ડમાં સેવ. ઓફલાઇન હો તો નેટ આવતા સેવ થશે.</span></div></label>
-
       <div class="sec-t">સ્લાઇડ</div>
       <label class="opt"><span class="switch"><input type="checkbox" id="st-split"><i></i></span><div>અલ્પવિરામ (, ; :) પર લીટી તોડો<span class="d">લાંબી લીટી આપમેળે બે ભાગમાં વહેંચાય છે.</span></div></label>
       <label class="opt"><span class="switch"><input type="checkbox" id="st-blank"><i></i></span><div>ખાલી લીટી = નવી સ્લાઇડ<span class="d">કડી/અંતરા અલગ સ્લાઇડથી શરૂ થાય.</span></div></label>
@@ -320,6 +312,22 @@ dialog::backdrop{background:rgba(10,10,15,.55);backdrop-filter:blur(2px)}
       <div class="hint" id="st-offline"></div>
     </div>
     <div class="dlg-f"><span class="grow"></span><button id="set-close" class="btn btn-primary">સેવ કરો</button></div>
+  </div></dialog>
+
+  <!-- એડમિન: GitHub જોડાણ (સામાન્ય સેટિંગ્સમાં દેખાતું નથી) -->
+  <dialog id="dlg-admin"><div class="dlg-card">
+    <div class="dlg-h"><span class="grow">એડમિન — GitHub જોડાણ</span></div>
+    <div class="dlg-b">
+      <div class="hint" style="margin-bottom:6px">આ વિગતો ફક્ત આ ડિવાઇસ/બ્રાઉઝરમાં સચવાય છે અને બીજે ક્યાંય દેખાતી નથી. આ સ્ક્રીન ખોલવા લોગો (ૐ) પર ઝડપથી 5 વાર ક્લિક કરો.</div>
+      <div class="row2"><div><label for="gh-user">GitHub Username</label><input type="text" id="gh-user" autocomplete="off"></div><div><label for="gh-repo">Repository</label><input type="text" id="gh-repo" autocomplete="off"></div></div>
+      <div class="row2"><div><label for="gh-branch">Branch (ખાલી = default)</label><input type="text" id="gh-branch" autocomplete="off" placeholder="main"></div><div><label for="gh-path">ફાઇલનો path</label><input type="text" id="gh-path" autocomplete="off" placeholder="kirtans.txt"></div></div>
+      <label for="gh-token">Personal Access Token</label><input type="password" id="gh-token" autocomplete="off">
+      <div class="hint">સુરક્ષા માટે <b>Fine-grained token</b> બનાવો: ફક્ત આ એક repository, અને ફક્ત <b>Contents → Read and write</b>. ટોકન આ બ્રાઉઝરમાં જ સચવાય છે.</div>
+      <div style="display:flex;gap:10px;align-items:center;margin-top:8px"><button id="gh-test" class="btn btn-ghost btn-sm">કનેક્શન ચકાસો</button><span class="hint" id="gh-result"></span></div>
+      <label class="opt" style="margin-top:6px"><span class="switch"><input type="checkbox" id="st-auto"><i></i></span><div>ફેરફાર ઓટોમેટિક GitHub પર સેવ કરો<span class="d">એડિટ પછી થોડી સેકન્ડમાં સેવ. ઓફલાઇન હો તો નેટ આવતા સેવ થશે.</span></div></label>
+
+    </div>
+    <div class="dlg-f"><button id="ad-disc" class="btn btn-danger">ડિસ્કનેક્ટ (ટોકન કાઢો)</button><span class="grow"></span><button id="ad-close" class="btn btn-primary">સેવ કરો</button></div>
   </div></dialog>
 
   <!-- મેળ ન ખાવાનો સંવાદ -->
@@ -694,7 +702,7 @@ function startController() {
 
   function refreshSync() {
     let cls, txt, icn;
-    if (!ghOn()) { cls = 'warn'; icn = 'alert'; txt = S.dirty ? 'ફેરફાર ફક્ત આ ડિવાઇસ પર · GitHub જોડો' : 'GitHub જોડાયું નથી'; }
+    if (!ghOn()) { cls = 'warn'; icn = 'alert'; txt = S.dirty ? 'ફેરફાર ફક્ત આ ડિવાઇસ પર સચવાયા' : 'ફક્ત જોવા/ચલાવવા માટે'; }
     else if (F.saving) { cls = 'busy'; icn = 'refresh'; txt = 'GitHub પર સેવ થઈ રહ્યું છે…'; }
     else if (F.conflict) { cls = 'err'; icn = 'alert'; txt = 'GitHub સાથે મેળ નથી — ક્લિક કરો'; }
     else if (F.err) { cls = 'err'; icn = 'alert'; txt = F.err; }
@@ -785,7 +793,7 @@ function startController() {
 
   el.sync.onclick = () => {
     if (F.conflict) return showConflict();
-    if (!ghOn()) return openSettings();
+    if (!ghOn()) { toast('આ ડિવાઇસ પર GitHub સેવ ચાલુ નથી — ફેરફાર ફક્ત આ ડિવાઇસ પર રહેશે'); return; }
     F.err = '';
     if (S.dirty) pushNow(); else syncDown(true);
     refreshSync();
@@ -1028,11 +1036,8 @@ function startController() {
 
   /* ----- સેટિંગ્સ ----- */
   function openSettings() {
-    $('#gh-user').value = LS.get('gh_user', ''); $('#gh-repo').value = LS.get('gh_repo', '');
-    $('#gh-branch').value = LS.get('gh_branch', ''); $('#gh-path').value = LS.get('gh_path', '');
-    $('#gh-token').value = LS.get('gh_token', '');
-    $('#st-auto').checked = !!S.set.autoSave; $('#st-split').checked = !!S.set.splitPunct; $('#st-blank').checked = !!S.set.blankBreak;
-    $('#st-exc').value = S.set.exceptions || ''; $('#gh-result').textContent = '';
+    $('#st-split').checked = !!S.set.splitPunct; $('#st-blank').checked = !!S.set.blankBreak;
+    $('#st-exc').value = S.set.exceptions || '';
     $('#st-btop').value = S.set.bandTop || ''; $('#st-bbot').value = S.set.bandBottom || '';
     $('#st-offline').textContent = ('serviceWorker' in navigator && navigator.serviceWorker.controller) ? '✓ ઓફલાઇન મોડ તૈયાર છે (એપ ફાઇલો ડિવાઇસ પર સેવ છે).' : 'ઓફલાઇન મોડ માટે એપ એક વાર ઇન્ટરનેટ સાથે (https/GitHub Pages પર) ખોલો અને પેજ રીફ્રેશ કરો.';
     dSet.showModal();
@@ -1043,6 +1048,30 @@ function startController() {
     LS.set('gh_token', $('#gh-token').value.trim());
   }
   el.settingsbtn.onclick = openSettings;
+  const dAdmin = $('#dlg-admin');
+  function openAdmin() {
+    $('#gh-user').value = LS.get('gh_user', ''); $('#gh-repo').value = LS.get('gh_repo', '');
+    $('#gh-branch').value = LS.get('gh_branch', ''); $('#gh-path').value = LS.get('gh_path', '');
+    $('#gh-token').value = LS.get('gh_token', ''); $('#st-auto').checked = !!S.set.autoSave;
+    $('#gh-result').textContent = '';
+    dAdmin.showModal();
+  }
+  let logoTaps = [];
+  $('.mark').addEventListener('click', () => {
+    const now = Date.now(); logoTaps = logoTaps.filter(t => now - t < 3000); logoTaps.push(now);
+    if (logoTaps.length >= 5) { logoTaps = []; openAdmin(); }
+  });
+  if (location.hash === '#admin') { history.replaceState(null, '', location.pathname + location.search); setTimeout(openAdmin, 300); }
+  $('#ad-close').onclick = () => {
+    readGhFields(); S.set.autoSave = $('#st-auto').checked; saveSettings(); dAdmin.close();
+    F.err = ''; F.conflict = false; refreshSync();
+    if (ghOn()) { if (S.dirty) schedulePush(300); else syncDown(); }
+  };
+  $('#ad-disc').onclick = () => {
+    if (!confirm('આ ડિવાઇસ પરથી GitHub ટોકન અને જોડાણ કાઢી નાખવું છે?')) return;
+    ['gh_user', 'gh_repo', 'gh_branch', 'gh_path', 'gh_token'].forEach(k => { try { localStorage.removeItem(k); } catch (e) {} });
+    dAdmin.close(); F.err = ''; refreshSync(); toast('GitHub જોડાણ કાઢી નાખ્યું');
+  };
   $('#gh-test').onclick = async () => {
     readGhFields();
     const out = $('#gh-result');
@@ -1054,8 +1083,7 @@ function startController() {
   $('#st-btop').addEventListener('input', e => { S.set.bandTop = e.target.value; saveSettings(); pushLed(); });
   $('#st-bbot').addEventListener('input', e => { S.set.bandBottom = e.target.value; saveSettings(); pushLed(); });
   $('#set-close').onclick = () => {
-    readGhFields();
-    S.set.autoSave = $('#st-auto').checked; S.set.splitPunct = $('#st-split').checked; S.set.blankBreak = $('#st-blank').checked;
+    S.set.splitPunct = $('#st-split').checked; S.set.blankBreak = $('#st-blank').checked;
     S.set.exceptions = $('#st-exc').value; USER_EXC = parseExceptions(S.set.exceptions);
     saveSettings(); dSet.close(); F.err = ''; F.conflict = false;
     rebuildSlides(false); refreshSync();
@@ -1137,7 +1165,6 @@ function startController() {
     }
     syncQuick(); renderList(); renderQueue(); renderSlideList(); renderStage(); refreshSync();
     pushLed();
-    if (!ghOn() && !LS.get('kc_hint_gh', '')) { LS.set('kc_hint_gh', '1'); setTimeout(() => toast('ઓટો-સેવ માટે ⚙ સેટિંગ્સમાં GitHub જોડો', { label: 'ખોલો', onClick: openSettings, ms: 7000 }), 1200); }
     syncDown().then(() => { if (S.dirty) schedulePush(1500); });
   })();
 
