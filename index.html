@@ -433,7 +433,7 @@ function parseExceptions(txt) {
 }
 
 /* ---------- LED વ્યૂ (પ્રિવ્યૂ અને બહારની વિન્ડો બંને આ જ વાપરે) ---------- */
-const WELCOME = { mode: 'slide', guj: ['શ્રી સ્વામિનારાયણ ભગવાનની જય'], eng: ['Shree Swaminarayan Bhagwanni Jay'], showEng: true, theme: 'dark', scale: 100 };
+const WELCOME = { mode: 'blank', guj: [], eng: [], showEng: true, theme: 'dark', scale: 100 }; /* કંઈ Live ન હોય ત્યારે LED ખાલી રહે */
 function createLedView(root) {
   root.classList.add('led', 'dark');
   root.innerHTML = '<div class="led-area"><div class="led-lang led-guj"></div><div class="led-divider"></div><div class="led-lang led-eng"></div></div>';
@@ -784,7 +784,7 @@ function startController() {
     const sl = S.slides[S.idx];
     lastTs = Math.max(Date.now(), lastTs + 1);
     const base = { type: 'state', theme: S.set.ledTheme, showEng: S.set.showEng, scale: S.set.scale, ts: lastTs, mode: S.blank ? 'blank' : 'slide' };
-    return (S.live && sl) ? Object.assign(base, { guj: sl.guj, eng: sl.eng }) : Object.assign({}, WELCOME, base);
+    return (S.live && sl) ? Object.assign(base, { guj: sl.guj, eng: sl.eng }) : Object.assign({}, WELCOME, base, { mode: 'blank' });
   }
   function pushLed() {
     const m = ledMsg();
