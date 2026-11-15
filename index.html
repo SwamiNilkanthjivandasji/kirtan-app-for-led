@@ -176,7 +176,13 @@ dialog::backdrop{background:rgba(10,10,15,.55);backdrop-filter:blur(2px)}
 .tabbar{display:none}
 
 /* ---------- LED view (preview + external window) ---------- */
-.led{width:100%;height:100%;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;transition:background-color .35s}
+.led{width:100%;height:100%;display:flex;flex-direction:column;align-items:stretch;overflow:hidden;position:relative;transition:background-color .35s}
+.led-main{flex:1;min-height:0;width:100%;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.led-band{flex:none;position:relative;display:flex;align-items:center;justify-content:center;width:100%;overflow:hidden}
+.led-band span{display:inline-block;white-space:nowrap;font-family:'Bhujmandir Hari','Noto Sans Gujarati','Hind Vadodara','Nirmala UI','Shruti','Gujarati Sangam MN',sans-serif;font-weight:700;letter-spacing:.02em;line-height:1}
+.led-band:after,.led-band:before{content:'';position:absolute;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,currentColor,transparent);opacity:.65}
+.led-top:after{bottom:0} .led-top:before{display:none} .led-bottom:before{top:0} .led-bottom:after{display:none}
+.led.dark .led-band{color:#fbbf24} .led.light .led-band{color:#9a3412}
 .led.dark{background:#000} .led.light{background:#fff}
 .led-area{width:100%;display:flex;flex-direction:column;align-items:center;gap:var(--gap,12px)}
 .led-lang{display:flex;flex-direction:column;align-items:center;width:100%;gap:calc(var(--gap,12px)*.55)}
@@ -243,6 +249,7 @@ dialog::backdrop{background:rgba(10,10,15,.55);backdrop-filter:blur(2px)}
         <button id="blank" class="btn btn-ghost btn-sm" title="સ્ક્રીન ખાલી / પાછી ( B )"></button>
         <div class="q-group">લીટી/સ્લાઇડ <div class="seg" id="seg-lines"><button data-v="1">1</button><button data-v="2">2</button><button data-v="3">3</button><button data-v="4">4</button></div></div>
         <div class="q-group">અંગ્રેજી <label class="switch"><input type="checkbox" id="sw-eng" aria-label="અંગ્રેજી બતાવો"><i></i></label></div>
+        <div class="q-group">પટ્ટી <label class="switch"><input type="checkbox" id="sw-band" aria-label="ઉપર-નીચે પટ્ટી"><i></i></label></div>
         <div class="q-group">LED <div class="seg" id="seg-theme"><button data-v="dark">કાળી</button><button data-v="light">સફેદ</button></div></div>
         <div class="q-group">અક્ષર <input type="range" id="rg-scale" min="50" max="100" step="5" aria-label="અક્ષરનું કદ"></div>
       </div>
@@ -294,6 +301,11 @@ dialog::backdrop{background:rgba(10,10,15,.55);backdrop-filter:blur(2px)}
       <div class="sec-t">સ્લાઇડ</div>
       <label class="opt"><span class="switch"><input type="checkbox" id="st-split"><i></i></span><div>અલ્પવિરામ (, ; :) પર લીટી તોડો<span class="d">લાંબી લીટી આપમેળે બે ભાગમાં વહેંચાય છે.</span></div></label>
       <label class="opt"><span class="switch"><input type="checkbox" id="st-blank"><i></i></span><div>ખાલી લીટી = નવી સ્લાઇડ<span class="d">કડી/અંતરા અલગ સ્લાઇડથી શરૂ થાય.</span></div></label>
+
+      <div class="sec-t">LED પટ્ટી (ઉપર-નીચે પાતળી લાઇન)</div>
+      <label for="st-btop">ઉપરની પટ્ટીમાં લખાણ</label><input type="text" id="st-btop" autocomplete="off" placeholder="દા.ત. કચ્છ શ્રી નરનારાયણદેવ યુવક-યુવતી મંડળ">
+      <label for="st-bbot">નીચેની પટ્ટીમાં લખાણ</label><input type="text" id="st-bbot" autocomplete="off" placeholder="દા.ત. સ્થળ / તારીખ / સંપર્ક">
+      <div class="hint">લખાણ ખાલી રાખશો તો ફક્ત પાતળી સુશોભન લાઇન દેખાશે. ટાઇપ કરતાં જ LED પર બદલાય છે. ફક્ત આ ડિવાઇસ પર સચવાય છે.</div>
 
       <div class="sec-t">અંગ્રેજી ઉચ્ચાર સુધારણા</div>
       <div class="hint">ખોટા ઉચ્ચારવાળા શબ્દ માટે દરેક લીટીમાં લખો: <code>ગુજરાતી શબ્દ=Roman</code> (ફક્ત આ ડિવાઇસ પર સચવાય છે)</div>
@@ -436,16 +448,36 @@ function parseExceptions(txt) {
 const WELCOME = { mode: 'blank', guj: [], eng: [], showEng: true, theme: 'dark', scale: 100 }; /* કંઈ Live ન હોય ત્યારે LED ખાલી રહે */
 function createLedView(root) {
   root.classList.add('led', 'dark');
-  root.innerHTML = '<div class="led-area"><div class="led-lang led-guj"></div><div class="led-divider"></div><div class="led-lang led-eng"></div></div>';
-  const area = root.firstChild, gujEl = area.children[0], divEl = area.children[1], engEl = area.children[2];
+  root.innerHTML = '<div class="led-band led-top"><span></span></div><div class="led-main"><div class="led-area"><div class="led-lang led-guj"></div><div class="led-divider"></div><div class="led-lang led-eng"></div></div></div><div class="led-band led-bottom"><span></span></div>';
+  const topEl = root.children[0], main = root.children[1], botEl = root.children[2];
+  const area = main.firstChild, gujEl = area.children[0], divEl = area.children[1], engEl = area.children[2];
   let st = null;
   function fill(el, lines) {
     el.textContent = '';
     lines.forEach(t => { const d = document.createElement('div'); d.className = 'led-line'; d.textContent = t; el.appendChild(d); });
   }
+  function fitBands() {
+    const on = !!(st && st.bandOn);
+    [topEl, botEl].forEach(b => { b.style.display = on ? '' : 'none'; });
+    if (!on) return;
+    const RH = root.clientHeight, RW = root.clientWidth;
+    if (!RH || !RW) return;
+    [[topEl, st.bandTop], [botEl, st.bandBottom]].forEach(([b, t]) => {
+      const sp = b.firstChild, has = !!(t && t.trim());
+      sp.textContent = has ? t : '';
+      const h = has ? RH * 0.055 : RH * 0.012;
+      b.style.height = h + 'px';
+      if (has) {
+        let fs = h * 0.56; sp.style.fontSize = fs + 'px';
+        const maxW = RW * 0.94;
+        if (sp.scrollWidth > maxW) { fs *= maxW / sp.scrollWidth; sp.style.fontSize = fs + 'px'; }
+      }
+    });
+  }
   function fit() {
     if (!st || st.mode === 'blank') return;
-    const W = root.clientWidth, H = root.clientHeight;
+    fitBands();
+    const W = root.clientWidth, H = main.clientHeight;
     if (!W || !H) return;
     const showEng = engEl.style.display !== 'none';
     const maxW = W * 0.94, maxH = H * 0.9, scale = (st.scale || 100) / 100;
@@ -463,8 +495,9 @@ function createLedView(root) {
     st = s;
     root.classList.toggle('dark', s.theme !== 'light');
     root.classList.toggle('light', s.theme === 'light');
-    if (s.mode === 'blank') { area.style.visibility = 'hidden'; return; }
-    area.style.visibility = 'visible';
+    const vis = s.mode === 'blank' ? 'hidden' : 'visible';
+    [topEl, main, botEl].forEach(e => { e.style.visibility = vis; });
+    if (s.mode === 'blank') return;
     const showEng = !!s.showEng && (s.eng || []).some(Boolean);
     fill(gujEl, s.guj || []);
     fill(engEl, showEng ? s.eng : []);
@@ -525,7 +558,7 @@ function startController() {
   ['search','list','count','qlist','qcount','qnext','qclear','livetitle','stageh','counter','prev','next','blank','slides','pv','ledchip','sync','syncIcon','syncText','theme','openled','openledIcon','settingsbtn','newbtn','grid','tabbar','toasts','searchIcon'].forEach(id => el[id] = document.getElementById(id));
   const dEdit = $('#dlg-edit'), dSet = $('#dlg-set'), dConf = $('#dlg-conf');
 
-  const DEF = { lines: 2, splitPunct: true, blankBreak: false, showEng: true, ledTheme: 'dark', scale: 100, autoSave: true, exceptions: '' };
+  const DEF = { lines: 2, splitPunct: true, blankBreak: false, showEng: true, ledTheme: 'dark', scale: 100, autoSave: true, exceptions: '', bandOn: true, bandTop: 'કચ્છ શ્રી નરનારાયણદેવ યુવક-યુવતી મંડળ', bandBottom: '' };
   const S = {
     kirtans: [], sha: null, dirty: false,
     queue: [], live: null, slides: [], idx: 0, blank: false,
@@ -783,7 +816,7 @@ function startController() {
   function ledMsg() {
     const sl = S.slides[S.idx];
     lastTs = Math.max(Date.now(), lastTs + 1);
-    const base = { type: 'state', theme: S.set.ledTheme, showEng: S.set.showEng, scale: S.set.scale, ts: lastTs, mode: S.blank ? 'blank' : 'slide' };
+    const base = { type: 'state', theme: S.set.ledTheme, showEng: S.set.showEng, scale: S.set.scale, bandOn: S.set.bandOn, bandTop: S.set.bandTop, bandBottom: S.set.bandBottom, ts: lastTs, mode: S.blank ? 'blank' : 'slide' };
     return (S.live && sl) ? Object.assign(base, { guj: sl.guj, eng: sl.eng }) : Object.assign({}, WELCOME, base, { mode: 'blank' });
   }
   function pushLed() {
@@ -865,13 +898,14 @@ function startController() {
   function syncQuick() {
     $('#seg-lines').querySelectorAll('button').forEach(b => b.classList.toggle('on', +b.dataset.v === +S.set.lines));
     $('#seg-theme').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.v === S.set.ledTheme));
-    $('#sw-eng').checked = !!S.set.showEng;
+    $('#sw-eng').checked = !!S.set.showEng; $('#sw-band').checked = !!S.set.bandOn;
     $('#rg-scale').value = S.set.scale;
   }
   function saveSettings() { LS.setJSON('kc_settings', S.set); }
   $('#seg-lines').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; S.set.lines = +b.dataset.v; saveSettings(); syncQuick(); rebuildSlides(false); });
   $('#seg-theme').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; S.set.ledTheme = b.dataset.v; saveSettings(); syncQuick(); pushLed(); });
   $('#sw-eng').onchange = e => { S.set.showEng = e.target.checked; saveSettings(); pushLed(); };
+  $('#sw-band').onchange = e => { S.set.bandOn = e.target.checked; saveSettings(); pushLed(); };
   $('#rg-scale').oninput = e => { S.set.scale = +e.target.value; saveSettings(); pushLed(); };
 
   /* ----- લાઇબ્રેરી ----- */
@@ -990,6 +1024,7 @@ function startController() {
     $('#gh-token').value = LS.get('gh_token', '');
     $('#st-auto').checked = !!S.set.autoSave; $('#st-split').checked = !!S.set.splitPunct; $('#st-blank').checked = !!S.set.blankBreak;
     $('#st-exc').value = S.set.exceptions || ''; $('#gh-result').textContent = '';
+    $('#st-btop').value = S.set.bandTop || ''; $('#st-bbot').value = S.set.bandBottom || '';
     $('#st-offline').textContent = ('serviceWorker' in navigator && navigator.serviceWorker.controller) ? '✓ ઓફલાઇન મોડ તૈયાર છે (એપ ફાઇલો ડિવાઇસ પર સેવ છે).' : 'ઓફલાઇન મોડ માટે એપ એક વાર ઇન્ટરનેટ સાથે (https/GitHub Pages પર) ખોલો અને પેજ રીફ્રેશ કરો.';
     dSet.showModal();
   }
@@ -1007,6 +1042,8 @@ function startController() {
     try { const r = await ghGet(); out.textContent = '✓ કનેક્શન સફળ — ફાઇલ મળી (' + parseKirtans(r.text).length + ' કીર્તન)'; }
     catch (e) { out.textContent = '✗ ' + explain(e); }
   };
+  $('#st-btop').addEventListener('input', e => { S.set.bandTop = e.target.value; saveSettings(); pushLed(); });
+  $('#st-bbot').addEventListener('input', e => { S.set.bandBottom = e.target.value; saveSettings(); pushLed(); });
   $('#set-close').onclick = () => {
     readGhFields();
     S.set.autoSave = $('#st-auto').checked; S.set.splitPunct = $('#st-split').checked; S.set.blankBreak = $('#st-blank').checked;
