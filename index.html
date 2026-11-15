@@ -1,775 +1,1105 @@
 <!DOCTYPE html>
 <html lang="gu">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Advanced Kirtan Controller (Cloud Version)</title>
-    <link href="https://fonts.googleapis.com/css2?family=Hind+Vadodara:wght@400;600;700&family=Noto+Sans+Gujarati:wght@400;700;900&display=swap" rel="stylesheet">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>કીર્તન કંટ્રોલ પેનલ</title>
+<meta name="theme-color" content="#c2560a">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Gujarati:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script>
+/* LED વિન્ડો માટે ફ્લેશ ટાળવા શરૂઆતમાં જ class મૂકીએ */
+if (location.hash === '#led') document.documentElement.classList.add('is-led');
+(function () {
+  try {
+    var t = localStorage.getItem('theme');
+    if (!t) t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', t);
+  } catch (e) { document.documentElement.setAttribute('data-theme', 'light'); }
+})();
+</script>
+<style>
+:root{
+  --bg:#f5f2ec; --surface:#ffffff; --surface-2:#faf8f4; --line:#e7e1d6;
+  --ink:#1c1a17; --muted:#6f6a60;
+  --brand:#c2560a; --brand-hover:#a64808; --on-brand:#ffffff; --brand-soft:#fdebd9;
+  --live:#d92d20; --live-soft:#fee4e2;
+  --queue:#0e7490; --queue-soft:#e0f2f7;
+  --ok:#15803d; --warn:#b45309; --err:#b42318;
+  --radius:14px;
+  --font:'Noto Sans Gujarati','Hind Vadodara','Nirmala UI','Shruti','Gujarati Sangam MN',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+}
+[data-theme=dark]{
+  --bg:#0e1014; --surface:#171a21; --surface-2:#1d212a; --line:#2a2f3a;
+  --ink:#eceae5; --muted:#9aa0aa;
+  --brand:#f0883a; --brand-hover:#f59d57; --on-brand:#1a0f05; --brand-soft:#3a2514;
+  --live:#f87171; --live-soft:#3b1a1a;
+  --queue:#38bdf8; --queue-soft:#10303d;
+  --ok:#4ade80; --warn:#fbbf24; --err:#f87171;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{font-family:var(--font);background:var(--bg);color:var(--ink);overflow:hidden;font-size:15px;line-height:1.5}
+button,input,textarea,select{font:inherit;color:inherit}
+button{cursor:pointer}
+button:disabled{cursor:not-allowed;opacity:.45}
+:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+svg.ic{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.grow{flex:1}
+.muted{color:var(--muted)}
+.is-led #app{display:none}
 
-    <style>
-*,:after,:before{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgba(59,130,246,.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }::backdrop{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgba(59,130,246,.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }/*! tailwindcss v3.4.19 | MIT License | https://tailwindcss.com*/*,:after,:before{box-sizing:border-box;border:0 solid #e5e7eb}:after,:before{--tw-content:""}:host,html{line-height:1.5;-webkit-text-size-adjust:100%;-moz-tab-size:4;-o-tab-size:4;tab-size:4;font-family:ui-sans-serif,system-ui,sans-serif,Apple Color Emoji,Segoe UI Emoji,Segoe UI Symbol,Noto Color Emoji;font-feature-settings:normal;font-variation-settings:normal;-webkit-tap-highlight-color:transparent}body{margin:0;line-height:inherit}hr{height:0;color:inherit;border-top-width:1px}abbr:where([title]){-webkit-text-decoration:underline dotted;text-decoration:underline dotted}h1,h2,h3,h4,h5,h6{font-size:inherit;font-weight:inherit}a{color:inherit;text-decoration:inherit}b,strong{font-weight:bolder}code,kbd,pre,samp{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,Liberation Mono,Courier New,monospace;font-feature-settings:normal;font-variation-settings:normal;font-size:1em}small{font-size:80%}sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline}sub{bottom:-.25em}sup{top:-.5em}table{text-indent:0;border-color:inherit;border-collapse:collapse}button,input,optgroup,select,textarea{font-family:inherit;font-feature-settings:inherit;font-variation-settings:inherit;font-size:100%;font-weight:inherit;line-height:inherit;letter-spacing:inherit;color:inherit;margin:0;padding:0}button,select{text-transform:none}button,input:where([type=button]),input:where([type=reset]),input:where([type=submit]){-webkit-appearance:button;background-color:transparent;background-image:none}:-moz-focusring{outline:auto}:-moz-ui-invalid{box-shadow:none}progress{vertical-align:baseline}::-webkit-inner-spin-button,::-webkit-outer-spin-button{height:auto}[type=search]{-webkit-appearance:textfield;outline-offset:-2px}::-webkit-search-decoration{-webkit-appearance:none}::-webkit-file-upload-button{-webkit-appearance:button;font:inherit}summary{display:list-item}blockquote,dd,dl,figure,h1,h2,h3,h4,h5,h6,hr,p,pre{margin:0}fieldset{margin:0}fieldset,legend{padding:0}menu,ol,ul{list-style:none;margin:0;padding:0}dialog{padding:0}textarea{resize:vertical}input::-moz-placeholder,textarea::-moz-placeholder{opacity:1;color:#9ca3af}input::placeholder,textarea::placeholder{opacity:1;color:#9ca3af}[role=button],button{cursor:pointer}:disabled{cursor:default}audio,canvas,embed,iframe,img,object,svg,video{display:block;vertical-align:middle}img,video{max-width:100%;height:auto}[hidden]:where(:not([hidden=until-found])){display:none}.fixed{position:fixed}.absolute{position:absolute}.relative{position:relative}.z-10{z-index:10}.z-20{z-index:20}.m-0{margin:0}.mb-3{margin-bottom:.75rem}.ml-2{margin-left:.5rem}.mt-10{margin-top:2.5rem}.mt-2{margin-top:.5rem}.mt-4{margin-top:1rem}.flex{display:flex}.hidden{display:none}.h-1\/3{height:33.333333%}.h-16{height:4rem}.h-4{height:1rem}.h-5{height:1.25rem}.h-full{height:100%}.h-screen{height:100vh}.w-1\/4{width:25%}.w-2\/4{width:50%}.w-32{width:8rem}.w-4{width:1rem}.w-4\/5{width:80%}.w-5{width:1.25rem}.w-full{width:100%}.w-screen{width:100vw}.flex-1{flex:1 1 0%}.shrink-0{flex-shrink:0}.flex-grow{flex-grow:1}.cursor-pointer{cursor:pointer}.select-none{-webkit-user-select:none;-moz-user-select:none;user-select:none}.resize-none{resize:none}.resize{resize:both}.flex-col{flex-direction:column}.items-center{align-items:center}.justify-center{justify-content:center}.justify-between{justify-content:space-between}.gap-1{gap:.25rem}.gap-2{gap:.5rem}.gap-3{gap:.75rem}.gap-4{gap:1rem}.gap-6{gap:1.5rem}.space-y-1>:not([hidden])~:not([hidden]){--tw-space-y-reverse:0;margin-top:calc(.25rem*(1 - var(--tw-space-y-reverse)));margin-bottom:calc(.25rem*var(--tw-space-y-reverse))}.overflow-hidden{overflow:hidden}.overflow-y-auto{overflow-y:auto}.truncate{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.rounded{border-radius:.25rem}.rounded-full{border-radius:9999px}.rounded-md{border-radius:.375rem}.border{border-width:1px}.border-b{border-bottom-width:1px}.border-l{border-left-width:1px}.border-l-4{border-left-width:4px}.border-r{border-right-width:1px}.border-t{border-top-width:1px}.border-amber-100{--tw-border-opacity:1;border-color:rgb(254 243 199/var(--tw-border-opacity,1))}.border-amber-200{--tw-border-opacity:1;border-color:rgb(253 230 138/var(--tw-border-opacity,1))}.border-amber-300{--tw-border-opacity:1;border-color:rgb(252 211 77/var(--tw-border-opacity,1))}.border-amber-400{--tw-border-opacity:1;border-color:rgb(251 191 36/var(--tw-border-opacity,1))}.border-blue-200{--tw-border-opacity:1;border-color:rgb(191 219 254/var(--tw-border-opacity,1))}.border-blue-500{--tw-border-opacity:1;border-color:rgb(59 130 246/var(--tw-border-opacity,1))}.border-gray-100{--tw-border-opacity:1;border-color:rgb(243 244 246/var(--tw-border-opacity,1))}.border-gray-200{--tw-border-opacity:1;border-color:rgb(229 231 235/var(--tw-border-opacity,1))}.border-gray-300{--tw-border-opacity:1;border-color:rgb(209 213 219/var(--tw-border-opacity,1))}.border-transparent{border-color:transparent}.bg-amber-100{--tw-bg-opacity:1;background-color:rgb(254 243 199/var(--tw-bg-opacity,1))}.bg-amber-50\/20{background-color:rgba(255,251,235,.2)}.bg-amber-50\/40{background-color:rgba(255,251,235,.4)}.bg-amber-500{--tw-bg-opacity:1;background-color:rgb(245 158 11/var(--tw-bg-opacity,1))}.bg-blue-100{--tw-bg-opacity:1;background-color:rgb(219 234 254/var(--tw-bg-opacity,1))}.bg-blue-50{--tw-bg-opacity:1;background-color:rgb(239 246 255/var(--tw-bg-opacity,1))}.bg-blue-600{--tw-bg-opacity:1;background-color:rgb(37 99 235/var(--tw-bg-opacity,1))}.bg-emerald-500{--tw-bg-opacity:1;background-color:rgb(16 185 129/var(--tw-bg-opacity,1))}.bg-emerald-600{--tw-bg-opacity:1;background-color:rgb(5 150 105/var(--tw-bg-opacity,1))}.bg-green-100{--tw-bg-opacity:1;background-color:rgb(220 252 231/var(--tw-bg-opacity,1))}.bg-green-600{--tw-bg-opacity:1;background-color:rgb(22 163 74/var(--tw-bg-opacity,1))}.bg-purple-600{--tw-bg-opacity:1;background-color:rgb(147 51 234/var(--tw-bg-opacity,1))}.bg-slate-100{--tw-bg-opacity:1;background-color:rgb(241 245 249/var(--tw-bg-opacity,1))}.bg-slate-200{--tw-bg-opacity:1;background-color:rgb(226 232 240/var(--tw-bg-opacity,1))}.bg-slate-50{--tw-bg-opacity:1;background-color:rgb(248 250 252/var(--tw-bg-opacity,1))}.bg-slate-600{--tw-bg-opacity:1;background-color:rgb(71 85 105/var(--tw-bg-opacity,1))}.bg-slate-800{--tw-bg-opacity:1;background-color:rgb(30 41 59/var(--tw-bg-opacity,1))}.bg-white{--tw-bg-opacity:1;background-color:rgb(255 255 255/var(--tw-bg-opacity,1))}.p-0{padding:0}.p-2{padding:.5rem}.p-2\.5{padding:.625rem}.p-3{padding:.75rem}.p-4{padding:1rem}.p-5{padding:1.25rem}.px-2{padding-left:.5rem;padding-right:.5rem}.px-3{padding-left:.75rem;padding-right:.75rem}.px-4{padding-left:1rem;padding-right:1rem}.px-6{padding-left:1.5rem;padding-right:1.5rem}.px-8{padding-left:2rem;padding-right:2rem}.py-1{padding-top:.25rem;padding-bottom:.25rem}.py-1\.5{padding-top:.375rem;padding-bottom:.375rem}.py-2{padding-top:.5rem;padding-bottom:.5rem}.py-3{padding-top:.75rem;padding-bottom:.75rem}.text-center{text-align:center}.text-2xl{font-size:1.5rem;line-height:2rem}.text-lg{font-size:1.125rem;line-height:1.75rem}.text-sm{font-size:.875rem;line-height:1.25rem}.text-xl{font-size:1.25rem;line-height:1.75rem}.text-xs{font-size:.75rem;line-height:1rem}.font-bold{font-weight:700}.font-medium{font-weight:500}.font-normal{font-weight:400}.font-semibold{font-weight:600}.leading-none{line-height:1}.leading-relaxed{line-height:1.625}.tracking-wide{letter-spacing:.025em}.text-amber-600{--tw-text-opacity:1;color:rgb(217 119 6/var(--tw-text-opacity,1))}.text-amber-700{--tw-text-opacity:1;color:rgb(180 83 9/var(--tw-text-opacity,1))}.text-amber-800{--tw-text-opacity:1;color:rgb(146 64 14/var(--tw-text-opacity,1))}.text-amber-900{--tw-text-opacity:1;color:rgb(120 53 15/var(--tw-text-opacity,1))}.text-blue-700{--tw-text-opacity:1;color:rgb(29 78 216/var(--tw-text-opacity,1))}.text-gray-400{--tw-text-opacity:1;color:rgb(156 163 175/var(--tw-text-opacity,1))}.text-gray-500{--tw-text-opacity:1;color:rgb(107 114 128/var(--tw-text-opacity,1))}.text-gray-800{--tw-text-opacity:1;color:rgb(31 41 55/var(--tw-text-opacity,1))}.text-gray-900{--tw-text-opacity:1;color:rgb(17 24 39/var(--tw-text-opacity,1))}.text-red-400{--tw-text-opacity:1;color:rgb(248 113 113/var(--tw-text-opacity,1))}.text-slate-500{--tw-text-opacity:1;color:rgb(100 116 139/var(--tw-text-opacity,1))}.text-slate-700{--tw-text-opacity:1;color:rgb(51 65 85/var(--tw-text-opacity,1))}.text-slate-800{--tw-text-opacity:1;color:rgb(30 41 59/var(--tw-text-opacity,1))}.text-slate-900{--tw-text-opacity:1;color:rgb(15 23 42/var(--tw-text-opacity,1))}.text-white{--tw-text-opacity:1;color:rgb(255 255 255/var(--tw-text-opacity,1))}.shadow{--tw-shadow:0 1px 3px 0 rgba(0,0,0,.1),0 1px 2px -1px rgba(0,0,0,.1);--tw-shadow-colored:0 1px 3px 0 var(--tw-shadow-color),0 1px 2px -1px var(--tw-shadow-color)}.shadow,.shadow-\[0_-4px_10px_rgba\(0\2c 0\2c 0\2c 0\.02\)\]{box-shadow:var(--tw-ring-offset-shadow,0 0 #0000),var(--tw-ring-shadow,0 0 #0000),var(--tw-shadow)}.shadow-\[0_-4px_10px_rgba\(0\2c 0\2c 0\2c 0\.02\)\]{--tw-shadow:0 -4px 10px rgba(0,0,0,.02);--tw-shadow-colored:0 -4px 10px var(--tw-shadow-color)}.shadow-\[0_0_15px_rgba\(0\2c 0\2c 0\2c 0\.03\)\]{--tw-shadow:0 0 15px rgba(0,0,0,.03);--tw-shadow-colored:0 0 15px var(--tw-shadow-color)}.shadow-\[0_0_15px_rgba\(0\2c 0\2c 0\2c 0\.03\)\],.shadow-md{box-shadow:var(--tw-ring-offset-shadow,0 0 #0000),var(--tw-ring-shadow,0 0 #0000),var(--tw-shadow)}.shadow-md{--tw-shadow:0 4px 6px -1px rgba(0,0,0,.1),0 2px 4px -2px rgba(0,0,0,.1);--tw-shadow-colored:0 4px 6px -1px var(--tw-shadow-color),0 2px 4px -2px var(--tw-shadow-color)}.shadow-sm{--tw-shadow:0 1px 2px 0 rgba(0,0,0,.05);--tw-shadow-colored:0 1px 2px 0 var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow,0 0 #0000),var(--tw-ring-shadow,0 0 #0000),var(--tw-shadow)}.filter{filter:var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow)}.transition{transition-property:color,background-color,border-color,text-decoration-color,fill,stroke,opacity,box-shadow,transform,filter,-webkit-backdrop-filter;transition-property:color,background-color,border-color,text-decoration-color,fill,stroke,opacity,box-shadow,transform,filter,backdrop-filter;transition-property:color,background-color,border-color,text-decoration-color,fill,stroke,opacity,box-shadow,transform,filter,backdrop-filter,-webkit-backdrop-filter;transition-timing-function:cubic-bezier(.4,0,.2,1);transition-duration:.15s}.transition-colors{transition-property:color,background-color,border-color,text-decoration-color,fill,stroke;transition-timing-function:cubic-bezier(.4,0,.2,1);transition-duration:.15s}.hover\:border-amber-500:hover{--tw-border-opacity:1;border-color:rgb(245 158 11/var(--tw-border-opacity,1))}.hover\:border-blue-600:hover{--tw-border-opacity:1;border-color:rgb(37 99 235/var(--tw-border-opacity,1))}.hover\:bg-amber-200:hover{--tw-bg-opacity:1;background-color:rgb(253 230 138/var(--tw-bg-opacity,1))}.hover\:bg-amber-50:hover{--tw-bg-opacity:1;background-color:rgb(255 251 235/var(--tw-bg-opacity,1))}.hover\:bg-amber-500:hover{--tw-bg-opacity:1;background-color:rgb(245 158 11/var(--tw-bg-opacity,1))}.hover\:bg-amber-600:hover{--tw-bg-opacity:1;background-color:rgb(217 119 6/var(--tw-bg-opacity,1))}.hover\:bg-blue-600:hover{--tw-bg-opacity:1;background-color:rgb(37 99 235/var(--tw-bg-opacity,1))}.hover\:bg-blue-700:hover{--tw-bg-opacity:1;background-color:rgb(29 78 216/var(--tw-bg-opacity,1))}.hover\:bg-emerald-700:hover{--tw-bg-opacity:1;background-color:rgb(4 120 87/var(--tw-bg-opacity,1))}.hover\:bg-purple-700:hover{--tw-bg-opacity:1;background-color:rgb(126 34 206/var(--tw-bg-opacity,1))}.hover\:bg-slate-200:hover{--tw-bg-opacity:1;background-color:rgb(226 232 240/var(--tw-bg-opacity,1))}.hover\:bg-slate-300:hover{--tw-bg-opacity:1;background-color:rgb(203 213 225/var(--tw-bg-opacity,1))}.hover\:bg-slate-50:hover{--tw-bg-opacity:1;background-color:rgb(248 250 252/var(--tw-bg-opacity,1))}.hover\:bg-slate-700:hover{--tw-bg-opacity:1;background-color:rgb(51 65 85/var(--tw-bg-opacity,1))}.hover\:bg-slate-900:hover{--tw-bg-opacity:1;background-color:rgb(15 23 42/var(--tw-bg-opacity,1))}.hover\:text-red-600:hover{--tw-text-opacity:1;color:rgb(220 38 38/var(--tw-text-opacity,1))}.hover\:text-white:hover{--tw-text-opacity:1;color:rgb(255 255 255/var(--tw-text-opacity,1))}.focus\:outline-none:focus{outline:2px solid transparent;outline-offset:2px}.focus\:ring-2:focus{--tw-ring-offset-shadow:var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);--tw-ring-shadow:var(--tw-ring-inset) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color);box-shadow:var(--tw-ring-offset-shadow),var(--tw-ring-shadow),var(--tw-shadow,0 0 #0000)}.focus\:ring-amber-500:focus{--tw-ring-opacity:1;--tw-ring-color:rgb(245 158 11/var(--tw-ring-opacity,1))}.focus\:ring-blue-500:focus{--tw-ring-opacity:1;--tw-ring-color:rgb(59 130 246/var(--tw-ring-opacity,1))}
-.dark .dark\:border-amber-500{--tw-border-opacity:1;border-color:rgb(245 158 11/var(--tw-border-opacity,1))}.dark .dark\:border-amber-700\/50{border-color:rgba(180,83,9,.5)}.dark .dark\:border-amber-800{--tw-border-opacity:1;border-color:rgb(146 64 14/var(--tw-border-opacity,1))}.dark .dark\:border-blue-800{--tw-border-opacity:1;border-color:rgb(30 64 175/var(--tw-border-opacity,1))}.dark .dark\:border-slate-500{--tw-border-opacity:1;border-color:rgb(100 116 139/var(--tw-border-opacity,1))}.dark .dark\:border-slate-600{--tw-border-opacity:1;border-color:rgb(71 85 105/var(--tw-border-opacity,1))}.dark .dark\:border-slate-700{--tw-border-opacity:1;border-color:rgb(51 65 85/var(--tw-border-opacity,1))}.dark .dark\:bg-amber-600{--tw-bg-opacity:1;background-color:rgb(217 119 6/var(--tw-bg-opacity,1))}.dark .dark\:bg-amber-900\/10{background-color:rgba(120,53,15,.1)}.dark .dark\:bg-amber-900\/50{background-color:rgba(120,53,15,.5)}.dark .dark\:bg-amber-900\/60{background-color:rgba(120,53,15,.6)}.dark .dark\:bg-blue-700{--tw-bg-opacity:1;background-color:rgb(29 78 216/var(--tw-bg-opacity,1))}.dark .dark\:bg-blue-900\/40{background-color:rgba(30,58,138,.4)}.dark .dark\:bg-blue-900\/50{background-color:rgba(30,58,138,.5)}.dark .dark\:bg-green-800{--tw-bg-opacity:1;background-color:rgb(22 101 52/var(--tw-bg-opacity,1))}.dark .dark\:bg-slate-600{--tw-bg-opacity:1;background-color:rgb(71 85 105/var(--tw-bg-opacity,1))}.dark .dark\:bg-slate-700{--tw-bg-opacity:1;background-color:rgb(51 65 85/var(--tw-bg-opacity,1))}.dark .dark\:bg-slate-800{--tw-bg-opacity:1;background-color:rgb(30 41 59/var(--tw-bg-opacity,1))}.dark .dark\:bg-slate-900{--tw-bg-opacity:1;background-color:rgb(15 23 42/var(--tw-bg-opacity,1))}.dark .dark\:text-amber-100{--tw-text-opacity:1;color:rgb(254 243 199/var(--tw-text-opacity,1))}.dark .dark\:text-amber-200{--tw-text-opacity:1;color:rgb(253 230 138/var(--tw-text-opacity,1))}.dark .dark\:text-amber-300{--tw-text-opacity:1;color:rgb(252 211 77/var(--tw-text-opacity,1))}.dark .dark\:text-amber-500{--tw-text-opacity:1;color:rgb(245 158 11/var(--tw-text-opacity,1))}.dark .dark\:text-blue-300{--tw-text-opacity:1;color:rgb(147 197 253/var(--tw-text-opacity,1))}.dark .dark\:text-gray-100{--tw-text-opacity:1;color:rgb(243 244 246/var(--tw-text-opacity,1))}.dark .dark\:text-gray-200{--tw-text-opacity:1;color:rgb(229 231 235/var(--tw-text-opacity,1))}.dark .dark\:text-red-500{--tw-text-opacity:1;color:rgb(239 68 68/var(--tw-text-opacity,1))}.dark .dark\:text-slate-100{--tw-text-opacity:1;color:rgb(241 245 249/var(--tw-text-opacity,1))}.dark .dark\:text-slate-200{--tw-text-opacity:1;color:rgb(226 232 240/var(--tw-text-opacity,1))}.dark .dark\:text-slate-400{--tw-text-opacity:1;color:rgb(148 163 184/var(--tw-text-opacity,1))}.dark .dark\:text-slate-500{--tw-text-opacity:1;color:rgb(100 116 139/var(--tw-text-opacity,1))}.dark .dark\:text-white{--tw-text-opacity:1;color:rgb(255 255 255/var(--tw-text-opacity,1))}.dark .dark\:hover\:bg-amber-600:hover{--tw-bg-opacity:1;background-color:rgb(217 119 6/var(--tw-bg-opacity,1))}.dark .dark\:hover\:bg-blue-600:hover{--tw-bg-opacity:1;background-color:rgb(37 99 235/var(--tw-bg-opacity,1))}.dark .dark\:hover\:bg-slate-500:hover{--tw-bg-opacity:1;background-color:rgb(100 116 139/var(--tw-bg-opacity,1))}.dark .dark\:hover\:bg-slate-600:hover{--tw-bg-opacity:1;background-color:rgb(71 85 105/var(--tw-bg-opacity,1))}.dark .dark\:hover\:bg-slate-700:hover{--tw-bg-opacity:1;background-color:rgb(51 65 85/var(--tw-bg-opacity,1))}.dark .dark\:hover\:text-red-400:hover{--tw-text-opacity:1;color:rgb(248 113 113/var(--tw-text-opacity,1))}.dark .dark\:hover\:text-white:hover{--tw-text-opacity:1;color:rgb(255 255 255/var(--tw-text-opacity,1))}
-    </style>
-    <style>
-        body {
-            font-family: 'Noto Sans Gujarati', 'Hind Vadodara', sans-serif;
-            overflow: hidden;
-            transition: background-color 0.3s, color 0.3s;
-        }
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        .dark ::-webkit-scrollbar-thumb { background: #475569; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-        .dark ::-webkit-scrollbar-thumb:hover { background: #64748b; }
-        .k-item { content-visibility: auto; contain-intrinsic-size: auto 90px; }
-        .theme-transition-disable * {
-            transition: none !important;
-        }
-    </style>
+/* ---------- Header ---------- */
+#app{height:100dvh;display:flex;flex-direction:column}
+.top{display:flex;align-items:center;gap:10px;padding:10px 18px;background:var(--surface);border-bottom:1px solid var(--line);flex:none}
+.brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:18px;white-space:nowrap}
+.mark{width:36px;height:36px;border-radius:11px;background:var(--brand);color:var(--on-brand);display:grid;place-items:center;font-size:19px;font-weight:700}
+.brand small{display:block;font-weight:500;font-size:11px;color:var(--muted);margin-top:-3px}
+.pill{display:inline-flex;align-items:center;gap:7px;padding:6px 12px;border-radius:999px;border:1px solid var(--line);background:var(--surface-2);font-size:13px;font-weight:600;cursor:pointer;max-width:360px}
+.pill span.t{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pill.ok{color:var(--ok)} .pill.warn{color:var(--warn)} .pill.err{color:var(--err);border-color:var(--err)} .pill.busy{color:var(--queue)}
+.chip{display:inline-flex;align-items:center;gap:7px;padding:6px 11px;border-radius:999px;font-size:13px;font-weight:600;background:var(--surface-2);border:1px solid var(--line);color:var(--muted)}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--muted)}
+.chip.on{color:var(--ok)} .chip.on .dot{background:var(--ok);box-shadow:0 0 0 3px color-mix(in srgb,var(--ok) 25%,transparent)}
+
+/* ---------- Buttons ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;border:1px solid transparent;border-radius:10px;padding:9px 15px;font-weight:700;background:var(--surface-2);transition:background .12s,transform .05s,border-color .12s}
+.btn:active:not(:disabled){transform:translateY(1px)}
+.btn-primary{background:var(--brand);color:var(--on-brand)} .btn-primary:hover:not(:disabled){background:var(--brand-hover)}
+.btn-soft{background:var(--brand-soft);color:var(--brand)} .btn-soft:hover:not(:disabled){filter:brightness(.97)}
+.btn-queue{background:var(--queue-soft);color:var(--queue)}
+.btn-ghost{background:transparent;border-color:var(--line)} .btn-ghost:hover:not(:disabled){background:var(--surface-2)}
+.btn-danger{background:transparent;color:var(--err);border-color:color-mix(in srgb,var(--err) 40%,transparent)} .btn-danger:hover{background:color-mix(in srgb,var(--err) 10%,transparent)}
+.btn-icon{padding:8px;width:38px;height:38px}
+.btn-sm{padding:6px 11px;font-size:13px;border-radius:9px} .btn-sm.btn-icon{width:32px;height:32px;padding:6px}
+.btn-lg{padding:14px 22px;font-size:17px;border-radius:12px}
+
+/* ---------- Layout ---------- */
+.grid{flex:1;min-height:0;display:grid;grid-template-columns:minmax(290px,350px) minmax(0,1fr) minmax(260px,330px);gap:14px;padding:14px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);display:flex;flex-direction:column;min-height:0;overflow:hidden}
+.panel-h{padding:14px 16px 10px;display:flex;align-items:center;gap:9px;font-weight:800;font-size:15px}
+.panel-h .count{margin-left:auto;font-size:12px;font-weight:700;color:var(--muted);background:var(--surface-2);border:1px solid var(--line);border-radius:999px;padding:2px 10px}
+.scroll{overflow-y:auto;min-height:0}
+.scroll::-webkit-scrollbar{width:8px} .scroll::-webkit-scrollbar-thumb{background:var(--line);border-radius:8px}
+.empty{padding:28px 18px;text-align:center;color:var(--muted);font-size:14px}
+
+/* ---------- Library ---------- */
+.search{display:flex;align-items:center;gap:8px;margin:0 14px 10px;padding:0 12px;border:1px solid var(--line);border-radius:11px;background:var(--surface-2)}
+.search input{flex:1;border:0;background:transparent;padding:11px 0;outline:none}
+.search:focus-within{border-color:var(--brand)}
+#list{padding:2px 12px 14px;display:flex;flex-direction:column;gap:8px}
+.k-item{border:1px solid var(--line);border-radius:12px;padding:11px 12px;background:var(--surface);content-visibility:auto;contain-intrinsic-size:auto 96px;transition:border-color .12s,background .12s}
+.k-item:hover{border-color:color-mix(in srgb,var(--brand) 45%,var(--line))}
+.k-item.is-live{border-color:var(--live);background:color-mix(in srgb,var(--live) 7%,var(--surface))}
+.k-top{display:flex;align-items:flex-start;gap:8px}
+.k-title{font-weight:700;line-height:1.35;flex:1}
+.k-sub{font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+.k-actions{display:flex;gap:6px;margin-top:9px}
+.k-actions .btn-primary,.k-actions .btn-queue{flex:1}
+.tag{font-size:11px;font-weight:800;border-radius:6px;padding:2px 7px;letter-spacing:.03em;white-space:nowrap}
+.tag-live{background:var(--live);color:#fff}
+.tag-q{background:var(--queue-soft);color:var(--queue)}
+
+/* ---------- Stage ---------- */
+.stage-h{padding:14px 18px 8px;display:flex;align-items:center;gap:10px}
+.stage-h .tag-live{display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:4px 9px}
+.stage-h .tag-live i{width:7px;height:7px;border-radius:50%;background:#fff;animation:pulse 1.4s infinite}
+.stage-h.idle .tag-live{background:var(--surface-2);color:var(--muted);border:1px solid var(--line)} .stage-h.idle .tag-live i{animation:none;background:var(--muted)}
+@keyframes pulse{50%{opacity:.25}}
+#livetitle{font-weight:800;font-size:18px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.preview-wrap{padding:4px 18px 0;display:flex;justify-content:center;flex:none}
+.preview{aspect-ratio:16/9;width:min(100%,calc(40vh*16/9));border-radius:12px;overflow:hidden;border:1px solid var(--line);position:relative;background:#000}
+.preview .led{position:absolute;inset:0}
+.controls{display:flex;align-items:center;justify-content:center;gap:12px;padding:14px 18px 6px;flex:none}
+#counter{min-width:96px;text-align:center;font-weight:800;font-size:20px;font-variant-numeric:tabular-nums}
+#next{flex:1;max-width:340px;min-width:0}
+#next .t{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#prev{min-width:120px}
+#blank.active{background:#111;color:#fff;border-color:#111} [data-theme=dark] #blank.active{background:#fff;color:#111;border-color:#fff}
+.quick{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:center;padding:6px 18px 12px;border-bottom:1px solid var(--line);flex:none}
+.q-group{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);font-weight:600}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.seg button{border:0;background:var(--surface);padding:5px 12px;font-weight:700;font-size:13px;color:var(--muted)}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button.on{background:var(--brand);color:var(--on-brand)}
+.switch{position:relative;width:40px;height:23px;flex:none}
+.switch input{position:absolute;inset:0;opacity:0;margin:0;cursor:pointer}
+.switch i{position:absolute;inset:0;border-radius:99px;background:var(--line);transition:.15s}
+.switch i:after{content:"";position:absolute;top:3px;left:3px;width:17px;height:17px;border-radius:50%;background:#fff;transition:.15s}
+.switch input:checked+i{background:var(--brand)} .switch input:checked+i:after{transform:translateX(17px)}
+.switch input:focus-visible+i{outline:2px solid var(--brand);outline-offset:2px}
+input[type=range]{accent-color:var(--brand);width:110px}
+#slides{padding:10px 14px 14px;display:flex;flex-direction:column;gap:6px;flex:1}
+.s-item{display:flex;gap:11px;align-items:flex-start;text-align:left;padding:9px 12px;border-radius:11px;border:1px solid var(--line);background:var(--surface);width:100%}
+.s-item:hover{background:var(--surface-2)}
+.s-item.on{border-color:var(--brand);background:var(--brand-soft)}
+.s-num{flex:none;min-width:26px;height:26px;border-radius:8px;background:var(--surface-2);display:grid;place-items:center;font-size:12px;font-weight:800;color:var(--muted)}
+.s-item.on .s-num{background:var(--brand);color:var(--on-brand)}
+.s-text{min-width:0;font-weight:600;font-size:14px}
+.s-text div{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.s-text .e{font-weight:500;font-size:12.5px;color:var(--muted)}
+
+/* ---------- Queue ---------- */
+#qlist{padding:2px 12px 12px;display:flex;flex-direction:column;gap:7px;flex:1}
+.q-item{display:flex;align-items:center;gap:8px;padding:9px 8px 9px 6px;border:1px solid var(--line);border-radius:11px;background:var(--surface)}
+.q-item.over{border-color:var(--queue);background:var(--queue-soft)} .q-item.drag{opacity:.4}
+.grip{color:var(--muted);cursor:grab;display:grid;place-items:center}
+.q-num{width:24px;height:24px;border-radius:8px;background:var(--queue-soft);color:var(--queue);font-size:12px;font-weight:800;display:grid;place-items:center;flex:none}
+.q-title{flex:1;min-width:0;font-weight:600;font-size:14px;line-height:1.35;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.q-foot{padding:12px;border-top:1px solid var(--line);display:flex;gap:8px;flex:none}
+.q-foot .btn-primary{flex:1}
+
+/* ---------- Dialogs / toast ---------- */
+dialog{border:1px solid var(--line);border-radius:18px;padding:0;background:var(--surface);color:var(--ink);width:min(680px,94vw);max-height:92dvh;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+dialog::backdrop{background:rgba(10,10,15,.55);backdrop-filter:blur(2px)}
+.dlg-card{display:flex;flex-direction:column;max-height:92dvh}
+.dlg-h{display:flex;align-items:center;gap:10px;padding:16px 18px;border-bottom:1px solid var(--line);font-weight:800;font-size:17px}
+.dlg-b{padding:16px 18px;overflow-y:auto;display:flex;flex-direction:column;gap:6px}
+.dlg-f{display:flex;gap:10px;align-items:center;padding:14px 18px;border-top:1px solid var(--line);flex-wrap:wrap}
+.dlg-b label{font-weight:700;font-size:13px;color:var(--muted);margin-top:8px}
+.dlg-b input[type=text],.dlg-b input[type=password],.dlg-b textarea{width:100%;border:1px solid var(--line);background:var(--surface-2);border-radius:10px;padding:10px 12px;outline:none}
+.dlg-b input:focus,.dlg-b textarea:focus{border-color:var(--brand)}
+#ed-title{font-weight:800;font-size:19px}
+#ed-content{min-height:42vh;font-size:17px;line-height:1.7;resize:vertical}
+.hint{font-size:12.5px;color:var(--muted)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sec-t{font-weight:800;margin-top:16px;padding-top:14px;border-top:1px solid var(--line);font-size:15px}
+.sec-t:first-child{border:0;margin-top:0;padding-top:0}
+.opt{display:flex;align-items:center;gap:12px;padding:6px 0;font-weight:600}
+.opt span.d{display:block;font-weight:400;font-size:12.5px;color:var(--muted)}
+.toasts{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);display:flex;flex-direction:column;gap:8px;align-items:center;z-index:100;pointer-events:none}
+.toast{pointer-events:auto;background:#1c1a17;color:#fff;padding:10px 16px;border-radius:12px;font-weight:600;font-size:14px;display:flex;gap:14px;align-items:center;box-shadow:0 8px 28px rgba(0,0,0,.3);animation:up .2s}
+[data-theme=dark] .toast{background:#eceae5;color:#111}
+.toast button{background:transparent;border:0;color:#fbbf24;font-weight:800} [data-theme=dark] .toast button{color:#b45309}
+@keyframes up{from{transform:translateY(8px);opacity:0}}
+.tabbar{display:none}
+
+/* ---------- LED view (preview + external window) ---------- */
+.led{width:100%;height:100%;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;transition:background-color .35s}
+.led.dark{background:#000} .led.light{background:#fff}
+.led-area{width:100%;display:flex;flex-direction:column;align-items:center;gap:var(--gap,12px)}
+.led-lang{display:flex;flex-direction:column;align-items:center;width:100%;gap:calc(var(--gap,12px)*.55)}
+.led-line{white-space:nowrap;text-align:center;width:max-content;line-height:1.25}
+.led-guj .led-line{font-family:'Bhujmandir Hari','Noto Sans Gujarati','Hind Vadodara','Nirmala UI','Shruti','Gujarati Sangam MN',sans-serif;font-weight:700}
+.led-eng .led-line{font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-weight:600}
+.led-divider{width:80%;height:2px;border-radius:50%}
+.led.dark .led-guj .led-line{color:#fff} .led.dark .led-eng .led-line{color:#fbbf24}
+.led.dark .led-divider{background:linear-gradient(90deg,transparent,rgba(255,255,255,.4),transparent)}
+.led.light .led-guj .led-line{color:#1e3a8a} .led.light .led-eng .led-line{color:#c2410c}
+.led.light .led-divider{background:linear-gradient(90deg,transparent,rgba(0,0,0,.25),transparent)}
+.led-hint{position:absolute;top:12px;right:14px;font:13px sans-serif;padding:6px 12px;border-radius:8px;pointer-events:none;transition:opacity .6s}
+.led.dark .led-hint{color:rgba(255,255,255,.45);border:1px solid rgba(255,255,255,.2)}
+.led.light .led-hint{color:rgba(0,0,0,.45);border:1px solid rgba(0,0,0,.2)}
+#led-root{position:fixed;inset:0}
+#led-root.hide-cursor{cursor:none}
+
+/* ---------- Responsive ---------- */
+@media (max-width:1180px){ .grid{grid-template-columns:minmax(250px,300px) minmax(0,1fr) minmax(230px,280px)} #prev{min-width:96px} .top .hide-md{display:none} }
+@media (max-width:900px){
+  .grid{grid-template-columns:1fr;padding:10px;padding-bottom:0}
+  .grid .panel{display:none} .grid[data-tab=lib] #lib,.grid[data-tab=stage] #stage,.grid[data-tab=queue] #queue{display:flex}
+  .tabbar{display:grid;grid-template-columns:repeat(3,1fr);background:var(--surface);border-top:1px solid var(--line);flex:none}
+  .tabbar button{border:0;background:transparent;padding:11px 4px;font-weight:700;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:2px;font-size:12px}
+  .tabbar button.on{color:var(--brand)}
+  .top{padding:8px 12px;flex-wrap:wrap} .top .hide-sm{display:none}
+  .preview{width:100%}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
 </head>
-<body class="w-screen h-screen m-0 p-0 flex flex-col bg-slate-50 text-slate-900 dark:bg-slate-900 dark:text-slate-100">
+<body>
 
-    <!-- Header -->
-    <div class="h-16 bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700 flex justify-between items-center px-6 shadow-sm shrink-0 z-20 transition-colors">
-        <h1 class="text-2xl font-bold text-slate-800 dark:text-white">કીર્તન કંટ્રોલ પેનલ <span class="text-sm font-normal text-slate-500 dark:text-slate-400 ml-2">v4.2 (Cloud Edition)</span></h1>
-        <div class="flex gap-3">
-            <!-- Theme Toggle Button -->
-            <button id="theme-toggle" class="px-3 py-2 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-md shadow-sm transition flex items-center justify-center border border-gray-200 dark:border-slate-600" title="Toggle Light/Dark Mode">
-                <svg id="theme-icon-dark" class="w-5 h-5 hidden" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
-                <svg id="theme-icon-light" class="w-5 h-5 hidden" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4.22 2.32a1 1 0 011.415 0l.707.707a1 1 0 01-1.414 1.415l-.707-.708a1 1 0 010-1.414zm3.78 5.68a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM10 16a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zm-4.22-2.32a1 1 0 01-1.415 0l-.707-.707a1 1 0 011.414-1.415l.707.708a1 1 0 010 1.414zM2 10a1 1 0 011-1h1a1 1 0 110 2H3a1 1 0 01-1-1zm2.32-4.22a1 1 0 010-1.415l.707-.707a1 1 0 011.414 1.415l-.708.708a1 1 0 01-1.414 0zM10 5a5 5 0 100 10 5 5 0 000-10z" clip-rule="evenodd"></path></svg>
-            </button>
+<div id="app">
+  <header class="top">
+    <div class="brand"><div class="mark">ૐ</div><div>કીર્તન કંટ્રોલ<small>Kirtan Controller</small></div></div>
+    <div class="grow"></div>
+    <button id="sync" class="pill warn" title="GitHub સિંક સ્થિતિ — ક્લિક કરો"><span id="syncIcon"></span><span class="t" id="syncText">…</span></button>
+    <span id="ledchip" class="chip hide-sm"><span class="dot"></span><span>LED બંધ</span></span>
+    <button id="theme" class="btn btn-ghost btn-icon" title="લાઇટ / ડાર્ક" aria-label="થીમ બદલો"></button>
+    <button id="settingsbtn" class="btn btn-ghost btn-icon" title="સેટિંગ્સ" aria-label="સેટિંગ્સ"></button>
+    <button id="openled" class="btn btn-primary"><span id="openledIcon"></span><span>LED વ્યૂ ખોલો</span></button>
+  </header>
 
-            <!-- GitHub integration buttons -->
-            <button id="github-settings-btn" class="px-3 py-2 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-200 font-bold rounded-md shadow-sm transition border border-gray-300 dark:border-slate-500" title="GitHub Settings">
-                ⚙️ સેટિંગ્સ
-            </button>
-            <button id="save-github-btn" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md shadow-sm transition flex items-center gap-2">
-                <span>☁️ સીધું GitHub પર સેવ કરો</span>
-            </button>
+  <main class="grid" id="grid" data-tab="stage">
+    <!-- લાઇબ્રેરી -->
+    <section class="panel" id="lib" aria-label="કીર્તન લાઇબ્રેરી">
+      <div class="panel-h">કીર્તન લાઇબ્રેરી <span class="count" id="count">0</span></div>
+      <div class="search"><span id="searchIcon"></span><input id="search" type="search" placeholder="નામ કે શબ્દથી શોધો…   ( / )" autocomplete="off"></div>
+      <div style="padding:0 14px 10px"><button id="newbtn" class="btn btn-ghost btn-sm" style="width:100%"></button></div>
+      <div id="list" class="scroll grow"><div class="empty">કીર્તન લોડ થઈ રહ્યા છે…</div></div>
+    </section>
 
-            <!-- LED Window -->
-            <button id="open-led-btn" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-md shadow-sm transition flex items-center gap-2">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
-                <span>Open LED Window</span>
-            </button>
-        </div>
+    <!-- લાઇવ -->
+    <section class="panel" id="stage" aria-label="લાઇવ કંટ્રોલ">
+      <div class="stage-h idle" id="stageh"><span class="tag tag-live"><i></i>LIVE</span><div id="livetitle">કોઈ કીર્તન Live નથી</div></div>
+      <div class="preview-wrap"><div class="preview"><div id="pv"></div></div></div>
+      <div class="controls">
+        <button id="prev" class="btn btn-ghost btn-lg" title="પાછળ ( ← )"></button>
+        <div id="counter">0 / 0</div>
+        <button id="next" class="btn btn-primary btn-lg" title="આગળ ( → / Space )"></button>
+      </div>
+      <div class="quick">
+        <button id="blank" class="btn btn-ghost btn-sm" title="સ્ક્રીન ખાલી / પાછી ( B )"></button>
+        <div class="q-group">લીટી/સ્લાઇડ <div class="seg" id="seg-lines"><button data-v="1">1</button><button data-v="2">2</button><button data-v="3">3</button><button data-v="4">4</button></div></div>
+        <div class="q-group">અંગ્રેજી <label class="switch"><input type="checkbox" id="sw-eng" aria-label="અંગ્રેજી બતાવો"><i></i></label></div>
+        <div class="q-group">LED <div class="seg" id="seg-theme"><button data-v="dark">કાળી</button><button data-v="light">સફેદ</button></div></div>
+        <div class="q-group">અક્ષર <input type="range" id="rg-scale" min="50" max="100" step="5" aria-label="અક્ષરનું કદ"></div>
+      </div>
+      <div id="slides" class="scroll"><div class="empty">ડાબી બાજુથી કીર્તન પસંદ કરીને <b>Live</b> દબાવો.</div></div>
+    </section>
+
+    <!-- કતાર -->
+    <section class="panel" id="queue" aria-label="હવે પછીની કતાર">
+      <div class="panel-h">હવે પછી (કતાર) <span class="count" id="qcount">0</span></div>
+      <div id="qlist" class="scroll grow"></div>
+      <div class="q-foot">
+        <button id="qnext" class="btn btn-primary"></button>
+        <button id="qclear" class="btn btn-ghost" title="કતાર ખાલી કરો"></button>
+      </div>
+    </section>
+  </main>
+
+  <nav class="tabbar" id="tabbar">
+    <button data-tab="lib">લાઇબ્રેરી</button><button data-tab="stage" class="on">લાઇવ</button><button data-tab="queue">કતાર</button>
+  </nav>
+
+  <!-- એડિટર -->
+  <dialog id="dlg-edit"><div class="dlg-card">
+    <div class="dlg-h"><span class="grow">કીર્તન એડિટ કરો</span><span class="hint" style="font-weight:500">ફેરફાર ઓટોમેટિક સેવ થાય છે</span></div>
+    <div class="dlg-b">
+      <label for="ed-title">કીર્તનનું નામ</label><input type="text" id="ed-title" autocomplete="off">
+      <label for="ed-content">કીર્તન (દરેક લીટી અલગ લખો)</label><textarea id="ed-content"></textarea>
+      <div class="hint" id="ed-hint"></div>
     </div>
-
-    <!-- 3-Column Layout -->
-    <div class="flex-grow flex overflow-hidden">
-
-        <!-- COLUMN 1: Search & List (Left) -->
-        <div class="w-1/4 h-full bg-white dark:bg-slate-800 border-r border-gray-200 dark:border-slate-700 flex flex-col z-10 transition-colors">
-            <div class="p-4 border-b border-gray-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 transition-colors">
-                <input type="text" id="search-input" class="w-full p-2.5 bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-600 text-sm dark:text-white rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none transition-colors" placeholder="કીર્તન શોધો...">
-                <div class="text-xs text-gray-500 dark:text-slate-400 mt-2">સૂચના: કીર્તન નીચે આપેલ 'Live' કે 'Pending' બટન પર ક્લિક કરો.</div>
-            </div>
-            <div class="flex-grow overflow-y-auto p-3 flex flex-col gap-3" id="kirtan-list">
-                <!-- ઓટો લોડ માટેનું લખાણ -->
-                <div class="text-center text-gray-500 mt-10">કીર્તન લોડ થઈ રહ્યા છે...</div>
-            </div>
-        </div>
-
-        <!-- COLUMN 2: Live Editor & Controls (Middle) -->
-        <div class="w-2/4 h-full flex flex-col bg-slate-50 dark:bg-slate-900 relative shadow-[0_0_15px_rgba(0,0,0,0.03)] z-10 transition-colors">
-            <div class="p-3 bg-blue-600 dark:bg-blue-700 text-white font-bold text-center tracking-wide shadow-sm shrink-0">
-                🔴 LIVE ON SCREEN
-            </div>
-
-            <div class="p-5 flex-grow flex flex-col gap-4 overflow-y-auto">
-                <input type="text" id="live-title" class="w-full p-3 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-gray-900 dark:text-white rounded-md focus:ring-2 focus:ring-blue-500 font-bold text-xl transition-colors" placeholder="કીર્તનનું નામ">
-                <textarea id="live-content" class="w-full flex-grow p-4 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-gray-900 dark:text-white rounded-md focus:ring-2 focus:ring-blue-500 text-lg leading-relaxed resize-none transition-colors" placeholder="અહીં કીર્તન દેખાશે..."></textarea>
-
-                <button id="update-live-btn" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-md shadow transition text-lg border border-transparent">
-                    Update Live LED (Keep Slide Position)
-                </button>
-            </div>
-
-            <!-- Slide Nav -->
-            <div class="p-4 bg-white dark:bg-slate-800 border-t border-gray-200 dark:border-slate-700 shadow-[0_-4px_10px_rgba(0,0,0,0.02)] shrink-0 transition-colors">
-                <div class="flex justify-center items-center gap-6">
-                    <button id="prev-btn" class="px-8 py-3 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-200 font-bold rounded-md shadow-sm transition">
-                        ← Prev
-                    </button>
-                    <div id="slide-status" class="text-2xl font-bold text-slate-700 dark:text-slate-200 w-32 text-center">0 / 0</div>
-                    <button id="next-btn" class="px-8 py-3 bg-slate-800 dark:bg-slate-600 hover:bg-slate-900 dark:hover:bg-slate-500 text-white font-bold rounded-md shadow-sm transition">
-                        Next →
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- COLUMN 3: Pending Queue (Right) -->
-        <div class="w-1/4 h-full bg-white dark:bg-slate-800 border-l border-gray-200 dark:border-slate-700 flex flex-col z-10 transition-colors">
-            <div class="p-3 bg-amber-500 dark:bg-amber-600 text-white font-bold flex justify-between items-center tracking-wide shadow-sm shrink-0">
-                <span>⏳ UP NEXT (Queue)</span>
-                <span id="queue-count" class="bg-white text-amber-600 text-xs px-2 py-1 rounded-full font-bold">0</span>
-            </div>
-
-            <!-- Queue List Area -->
-            <div id="pending-queue-list" class="h-1/3 overflow-y-auto border-b border-amber-200 dark:border-amber-700/50 bg-amber-50/20 dark:bg-amber-900/10 p-2 space-y-1 transition-colors">
-                <div class="text-xs text-gray-400 dark:text-slate-500 text-center mt-4">કતારમાં કોઈ કીર્તન નથી.<br>ડાબી બાજુથી 'Pending' બટન દબાવીને ઉમેરો.</div>
-            </div>
-
-            <!-- Queue Editor Area -->
-            <div class="p-4 flex-grow flex flex-col gap-3 bg-amber-50/40 dark:bg-slate-800 overflow-y-auto transition-colors">
-                <label class="text-xs font-bold text-amber-700 dark:text-amber-500">પસંદ કરેલ પેન્ડિંગ કીર્તન એડિટ કરો:</label>
-                <input type="text" id="pending-title" class="w-full p-2 border border-amber-300 dark:border-slate-600 bg-white dark:bg-slate-700 font-bold text-amber-900 dark:text-amber-100 rounded-md focus:ring-2 focus:ring-amber-500 transition-colors" placeholder="કીર્તનનું નામ">
-                <textarea id="pending-content" class="w-full flex-grow p-3 border border-amber-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-800 dark:text-gray-200 rounded-md resize-none focus:ring-2 focus:ring-amber-500 transition-colors" placeholder="પેન્ડિંગ કીર્તન અહી દેખાશે અને તમે ઇડિટ કરી શકશો..."></textarea>
-
-                <div class="flex gap-2 shrink-0">
-                    <button id="save-pending-btn" class="flex-1 py-3 bg-amber-100 dark:bg-slate-700 hover:bg-amber-200 dark:hover:bg-slate-600 text-amber-800 dark:text-amber-200 font-bold rounded-md shadow-sm transition border border-amber-300 dark:border-slate-500">
-                        💾 સેવ કરો
-                    </button>
-                    <button id="make-live-btn" class="flex-1 py-3 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-md shadow-md transition flex justify-center items-center gap-1 border border-transparent">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
-                        Go Live
-                    </button>
-                </div>
-            </div>
-        </div>
-
+    <div class="dlg-f">
+      <button id="ed-del" class="btn btn-danger"></button><span class="grow"></span>
+      <button id="ed-apply" class="btn btn-soft" hidden>LED પર લાગુ કરો</button>
+      <button id="ed-close" class="btn btn-primary">પૂર્ણ</button>
     </div>
-
-    <script>
-        const MIN_SPLIT_LEN = 0;
-
-        // --- 0. Theme Initialization & Toggle ---
-        const themeToggleBtn = document.getElementById('theme-toggle');
-        const darkIcon = document.getElementById('theme-icon-dark');
-        const lightIcon = document.getElementById('theme-icon-light');
-        const htmlElement = document.documentElement;
-        let ledWin = null;
-
-        function sendToLED(msg) {
-            if (ledWin && !ledWin.closed) {
-                try { ledWin.postMessage(Object.assign({ kirtanLed: true }, msg), '*'); } catch (e) {}
-            }
-        }
-
-        function updateThemeUI() {
-            if (htmlElement.classList.contains('dark')) {
-                darkIcon.classList.add('hidden');
-                lightIcon.classList.remove('hidden');
-            } else {
-                lightIcon.classList.add('hidden');
-                darkIcon.classList.remove('hidden');
-            }
-        }
-
-        if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-            htmlElement.classList.add('dark');
-            localStorage.setItem('kirtan_led_theme', 'dark');
-        } else {
-            htmlElement.classList.remove('dark');
-            localStorage.setItem('kirtan_led_theme', 'light');
-        }
-        updateThemeUI();
-
-        themeToggleBtn.addEventListener('click', () => {
-            htmlElement.classList.add('theme-transition-disable');
-            
-            htmlElement.classList.toggle('dark');
-            const t = htmlElement.classList.contains('dark') ? 'dark' : 'light';
-            localStorage.setItem('theme', t);
-            localStorage.setItem('kirtan_led_theme', t);
-            sendToLED({ type: 'theme', theme: t });
-            updateThemeUI();
-            
-            void htmlElement.offsetHeight;
-            
-            setTimeout(() => {
-                htmlElement.classList.remove('theme-transition-disable');
-            }, 50);
-        });
-
-
-        // --- 1. Gujarati → Roman ---
-        const LONG_A = false;
-        const G_CONS = {'ક':'k','ખ':'kh','ગ':'g','ઘ':'gh','ઙ':'ng','ચ':'ch','છ':'chh','જ':'j','ઝ':'jh','ઞ':'ny','ટ':'t','ઠ':'th','ડ':'d','ઢ':'dh','ણ':'n','ત':'t','થ':'th','દ':'d','ધ':'dh','ન':'n','પ':'p','ફ':'f','બ':'b','ભ':'bh','મ':'m','ય':'y','ર':'r','લ':'l','ળ':'l','વ':'v','શ':'sh','ષ':'sh','સ':'s','હ':'h'};
-        const G_VOW = {'અ':'a','આ':LONG_A?'aa':'a','ઇ':'i','ઈ':'ee','ઉ':'u','ઊ':'oo','ઋ':'ru','ઍ':'e','એ':'e','ઐ':'ai','ઑ':'o','ઓ':'o','ઔ':'au'};
-        const G_MATRA = {'ા':LONG_A?'aa':'a','િ':'i','ી':'ee','ુ':'u','ૂ':'oo','ૃ':'ru','ૅ':'e','ે':'e','ૈ':'ai','ૉ':'o','ો':'o','ૌ':'au'};
-        const G_DIGIT = {'૦':'0','૧':'1','૨':'2','૩':'3','૪':'4','૫':'5','૬':'6','૭':'7','૮':'8','૯':'9'};
-        const G_EXC = {'શ્રી':'shree', 'શ્રીજી':'shreeji', 'સ્વામિનારાયણ':'swaminarayan', 'ભગવાન':'bhagwan', 'જય':'jay', 'મહારાજ':'maharaj', 'હરિ':'hari', 'કૃષ્ણ':'krishna', 'ઘનશ્યામ':'ghanshyam', 'સહજાનંદ':'sahajanand'};
-
-        function gujWord(word) {
-            word = word.replace(/[\u200C\u200D\u0ABC]/g, '');
-            if (!word) return '';
-            if (G_EXC[word]) return G_EXC[word];
-
-            const chars = [...word], syl = [];
-            let cl = [];
-            for (let i = 0; i < chars.length; i++) {
-                const ch = chars[i], nx = chars[i + 1];
-                if (G_CONS[ch] !== undefined) {
-                    let r = G_CONS[ch];
-                    if (ch === 'વ' && cl[cl.length - 1] === 's') r = 'w';
-                    if (ch === 'ઞ' && cl[cl.length - 1] === 'j') { cl.pop(); r = 'gn'; }
-                    cl.push(r);
-                    if (nx === '્') { i++; continue; }
-                    if (G_MATRA[nx] !== undefined) { syl.push({ cs: cl, v: G_MATRA[nx], fixed: true }); i++; }
-                    else syl.push({ cs: cl, v: 'a', fixed: false });
-                    cl = [];
-                } else if (G_VOW[ch] !== undefined) {
-                    syl.push({ cs: [], v: G_VOW[ch], fixed: true });
-                } else if (ch === 'ં' || ch === 'ઁ') {
-                    const s = syl[syl.length - 1];
-                    if (s) { s.coda = 'પફબભમ'.includes(nx || '#') ? 'm' : 'n'; s.fixed = true; }
-                } else if (ch === 'ઃ') {
-                    const s = syl[syl.length - 1];
-                    if (s) { s.coda = 'h'; s.fixed = true; }
-                } else if (G_DIGIT[ch] !== undefined) {
-                    syl.push({ cs: [], v: G_DIGIT[ch], fixed: true });
-                }
-            }
-            if (cl.length) syl.push({ cs: cl, v: '', fixed: true });
-
-            const n = syl.length;
-            for (let i = n - 1; i >= 0; i--) {
-                const s = syl[i];
-                if (s.fixed || s.v !== 'a' || !s.cs.length) continue;
-                if (i === n - 1) {
-                    if (n === 1) continue;
-                    const last = s.cs[s.cs.length - 1];
-                    if (s.cs.length > 1 && ['r', 'y', 'v', 'w'].includes(last)) continue;
-                    s.v = '';
-                } else if (i > 0 && syl[i - 1].v !== '' && syl[i + 1].v !== '') {
-                    s.v = '';
-                }
-            }
-            return syl.map(s => s.cs.join('') + s.v + (s.coda || '')).join('');
-        }
-
-        function transliterate(str) {
-            if (!str) return '';
-            const out = str.replace(/[\u0A80-\u0AFF\u200C\u200D]+/g, w => gujWord(w));
-            return out.charAt(0).toUpperCase() + out.slice(1);
-        }
-
-        function escapeHtml(s) {
-            return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-        }
-
-        // --- 2. State & Variables ---
-        let parsedKirtans = [];
-        let liveIndex = -1;
-
-        let pendingQueue = [];
-        let selectedQueueIndex = -1;
-
-        let currentSlides = [];
-        let currentSlideIndex = 0;
-        let slideCache = [];
-
-        // Elements
-        const listContainer = document.getElementById('kirtan-list');
-        const searchInput = document.getElementById('search-input');
-        const liveTitle = document.getElementById('live-title');
-        const liveContent = document.getElementById('live-content');
-        const pendingTitle = document.getElementById('pending-title');
-        const pendingContent = document.getElementById('pending-content');
-        const slideStatus = document.getElementById('slide-status');
-
-
-        // --- 3. Auto-Load & GitHub API Save ---
-        function utf8ToBase64(str) { return btoa(unescape(encodeURIComponent(str))); }
-        function base64ToUtf8(str) { return decodeURIComponent(escape(atob(str))); }
-
-        // પેજ લોડ થતાં જ ઓટોમેટિક કીર્તનો લાવવા માટે
-        window.addEventListener('DOMContentLoaded', async () => {
-            try {
-                // cache busting ઉમેર્યું છે જેથી હંમેશા લેટેસ્ટ ફાઈલ જ લોડ થાય
-                const response = await fetch('kirtans.txt?t=' + new Date().getTime());
-                if(response.ok) {
-                    const text = await response.text();
-                    parseFile(text);
-                } else {
-                    throw new Error('File not found');
-                }
-            } catch(e) {
-                console.error(e);
-                listContainer.innerHTML = '<div class="text-center text-red-500 mt-10">kirtans.txt ફાઇલ મળી નથી.<br>ગિટહબ પર અપલોડ કરેલી છે કે નહીં તે ચકાસો.</div>';
-            }
-        });
-
-        // સેટિંગ્સ માટે
-        document.getElementById('github-settings-btn').addEventListener('click', () => {
-            const user = prompt("તમારું GitHub Username નાખો (દા.ત. rahul123):", localStorage.getItem('gh_user') || '');
-            const repo = prompt("તમારા Repository નું નામ નાખો (દા.ત. kirtan-controller):", localStorage.getItem('gh_repo') || '');
-            const token = prompt("તમારો GitHub Personal Access Token (PAT) નાખો:\n(આ તમારા જ બ્રાઉઝરમાં સુરક્ષિત રહેશે)", localStorage.getItem('gh_token') || '');
-            
-            if(user !== null) localStorage.setItem('gh_user', user.trim());
-            if(repo !== null) localStorage.setItem('gh_repo', repo.trim());
-            if(token !== null) localStorage.setItem('gh_token', token.trim());
-            alert('સેટિંગ્સ સેવ થઈ ગયા છે!');
-        });
-
-        // ગિટહબ પર સીધું સેવ કરવાનું ફંક્શન
-        document.getElementById('save-github-btn').addEventListener('click', async () => {
-            const ghUser = localStorage.getItem('gh_user');
-            const ghRepo = localStorage.getItem('gh_repo');
-            const ghToken = localStorage.getItem('gh_token');
-            
-            if(!ghUser || !ghRepo || !ghToken) {
-                alert('કૃપા કરીને પહેલા "⚙️ સેટિંગ્સ" માં જઈને ગિટહબની માહિતી ભરો.'); return;
-            }
-            
-            if (parsedKirtans.length === 0) {
-                alert('કોઈ કીર્તન સેવ કરવા માટે નથી!'); return;
-            }
-            
-            if (liveIndex !== -1) {
-                parsedKirtans[liveIndex].title = liveTitle.value;
-                parsedKirtans[liveIndex].content = liveContent.value;
-            }
-            
-            let outputStr = '';
-            parsedKirtans.forEach(k => { outputStr += `Chapter_name - ${k.title}\n${k.content}\n\n`; });
-            
-            const btn = document.getElementById('save-github-btn');
-            const originalText = btn.innerHTML;
-            btn.innerHTML = 'સેવ થઈ રહ્યું છે... ☁️';
-            
-            try {
-                const url = `https://api.github.com/repos/${ghUser}/${ghRepo}/contents/kirtans.txt`;
-                
-                // 1. ફાઇલનો લેટેસ્ટ SHA મેળવો
-                const getRes = await fetch(url, { headers: { 'Authorization': `token ${ghToken}` } });
-                if (!getRes.ok) throw new Error('ગિટહબ સાથે કનેક્ટ થઈ શક્યું નથી. ચેક કરો કે Repo નામ અને Token સાચા છે.');
-                const getData = await getRes.json();
-                const currentSha = getData.sha;
-
-                // 2. નવી ફાઇલ અપલોડ કરો
-                const contentB64 = utf8ToBase64(outputStr);
-                const body = {
-                    message: 'Kirtan Controller દ્વારા કીર્તન અપડેટ કર્યા',
-                    content: contentB64,
-                    sha: currentSha
-                };
-                
-                const putRes = await fetch(url, {
-                    method: 'PUT',
-                    headers: {
-                        'Authorization': `token ${ghToken}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(body)
-                });
-                
-                if (!putRes.ok) throw new Error('સેવ કરવામાં ભૂલ આવી.');
-                
-                btn.innerHTML = "✓ ગિટહબ પર સેવ થઈ ગયું!";
-                btn.classList.replace('bg-blue-600', 'bg-green-600');
-                setTimeout(() => { btn.innerHTML = originalText; btn.classList.replace('bg-green-600', 'bg-blue-600'); }, 2000);
-            } catch (error) {
-                console.error(error);
-                alert(error.message);
-                btn.innerHTML = originalText;
-            }
-        });
-
-        function parseFile(text) {
-            parsedKirtans = [];
-            liveIndex = -1;
-            const parts = text.split('Chapter_name -');
-            parts.forEach(part => {
-                if (part.trim() === '') return;
-                const lines = part.split('\n');
-                let title = lines[0].trim();
-                if(title.startsWith('-')) title = title.substring(1).trim();
-                const content = lines.slice(1).join('\n').trim();
-                if (title || content) parsedKirtans.push({ title: title || 'અજ્ઞાત', content: content });
-            });
-            renderList();
-        }
-
-        // --- 4. UI Rendering & Interactions ---
-        const ITEM_BASE = 'border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700';
-        const ITEM_ACTIVE = 'border-blue-500 border-l-4 bg-blue-50 dark:bg-blue-900/40 shadow-sm';
-
-        let searchTimer = null;
-        searchInput.addEventListener('input', () => {
-            clearTimeout(searchTimer);
-            searchTimer = setTimeout(renderList, 180);
-        });
-
-        function renderList() {
-            const term = searchInput.value.toLowerCase().trim();
-            if (parsedKirtans.length === 0) { listContainer.innerHTML = ''; return; }
-
-            const parts = [];
-            for (let idx = 0; idx < parsedKirtans.length; idx++) {
-                const kirtan = parsedKirtans[idx];
-                if (!kirtan.title.toLowerCase().includes(term)) continue;
-                parts.push(
-                    '<div class="k-item p-3 rounded-md border ' + (idx === liveIndex ? ITEM_ACTIVE : ITEM_BASE) + ' transition-colors" data-idx="' + idx + '">' +
-                        '<div class="k-title font-bold text-gray-800 dark:text-gray-100 mb-3">' + escapeHtml(kirtan.title) + '</div>' +
-                        '<div class="flex gap-2">' +
-                            '<button data-act="live" class="flex-1 py-1.5 bg-blue-100 dark:bg-blue-900/50 hover:bg-blue-600 dark:hover:bg-blue-600 hover:text-white dark:hover:text-white text-blue-700 dark:text-blue-300 font-bold rounded text-xs transition border border-blue-200 dark:border-blue-800 hover:border-blue-600 shadow-sm">🔴 Live</button>' +
-                            '<button data-act="pending" class="flex-1 py-1.5 bg-amber-100 dark:bg-amber-900/50 hover:bg-amber-500 dark:hover:bg-amber-600 hover:text-white dark:hover:text-white text-amber-800 dark:text-amber-300 font-bold rounded text-xs transition border border-amber-200 dark:border-amber-800 hover:border-amber-500 shadow-sm">⏳ Pending</button>' +
-                        '</div>' +
-                    '</div>'
-                );
-            }
-            listContainer.innerHTML = parts.join('');
-        }
-
-        listContainer.addEventListener('click', (e) => {
-            const btn = e.target.closest('button[data-act]');
-            if (!btn) return;
-            const item = btn.closest('[data-idx]');
-            if (!item) return;
-            const idx = parseInt(item.dataset.idx, 10);
-            if (btn.dataset.act === 'live') setLiveDirectly(idx);
-            else addToQueue(idx);
-        });
-
-        function styleItem(el, active) {
-            if (!el) return;
-            ITEM_BASE.split(' ').forEach(c => el.classList.remove(c));
-            ITEM_ACTIVE.split(' ').forEach(c => el.classList.remove(c));
-            (active ? ITEM_ACTIVE : ITEM_BASE).split(' ').forEach(c => el.classList.add(c));
-        }
-
-        function setLiveHighlight(newIdx) {
-            if (liveIndex !== -1) styleItem(listContainer.querySelector('[data-idx="' + liveIndex + '"]'), false);
-            liveIndex = newIdx;
-            if (liveIndex !== -1) styleItem(listContainer.querySelector('[data-idx="' + liveIndex + '"]'), true);
-        }
-
-        // --- Queue System (Right Column) ---
-        function addToQueue(idx) {
-            const k = parsedKirtans[idx];
-            pendingQueue.push({ originalIndex: idx, title: k.title, content: k.content });
-            selectedQueueIndex = pendingQueue.length - 1;
-            renderQueue();
-        }
-
-        function renderQueue() {
-            const qList = document.getElementById('pending-queue-list');
-            document.getElementById('queue-count').innerText = pendingQueue.length;
-
-            if (pendingQueue.length === 0) {
-                qList.innerHTML = `<div class="text-xs text-gray-400 dark:text-slate-500 text-center mt-4">કતારમાં કોઈ કીર્તન નથી.<br>ડાબી બાજુથી 'Pending' બટન દબાવીને ઉમેરો.</div>`;
-                pendingTitle.value = ''; pendingContent.value = ''; selectedQueueIndex = -1; return;
-            }
-
-            qList.innerHTML = '';
-            pendingQueue.forEach((item, qIdx) => {
-                const isSelected = qIdx === selectedQueueIndex;
-                const div = document.createElement('div');
-                const styleClasses = isSelected
-                    ? 'bg-amber-100 dark:bg-amber-900/60 border-amber-400 dark:border-amber-500'
-                    : 'bg-white dark:bg-slate-800 border-amber-100 dark:border-slate-600 hover:bg-amber-50 dark:hover:bg-slate-700';
-
-                div.className = `flex justify-between items-center p-2 rounded cursor-pointer border transition-colors ${styleClasses}`;
-                div.innerHTML = `
-                    <span class="font-semibold text-sm truncate w-4/5 select-none text-amber-900 dark:text-amber-100" onclick="selectQueueItem(${qIdx})">${escapeHtml(item.title)}</span>
-                    <button class="text-red-400 dark:text-red-500 hover:text-red-600 dark:hover:text-red-400 font-bold text-lg leading-none px-2" onclick="removeFromQueue(${qIdx}, event)">×</button>
-                `;
-                qList.appendChild(div);
-            });
-
-            if (selectedQueueIndex !== -1 && pendingQueue[selectedQueueIndex]) {
-                pendingTitle.value = pendingQueue[selectedQueueIndex].title;
-                pendingContent.value = pendingQueue[selectedQueueIndex].content;
-            }
-        }
-
-        window.selectQueueItem = function(qIdx) { selectedQueueIndex = qIdx; renderQueue(); }
-        window.removeFromQueue = function(qIdx, event) {
-            if(event) event.stopPropagation();
-            pendingQueue.splice(qIdx, 1);
-            if (selectedQueueIndex === qIdx) { selectedQueueIndex = pendingQueue.length > 0 ? 0 : -1; }
-            else if (selectedQueueIndex > qIdx) { selectedQueueIndex--; }
-            renderQueue();
-        }
-
-        document.getElementById('save-pending-btn').addEventListener('click', () => {
-            if (selectedQueueIndex === -1) return;
-            const newTitle = pendingTitle.value; const newContent = pendingContent.value;
-            pendingQueue[selectedQueueIndex].title = newTitle; pendingQueue[selectedQueueIndex].content = newContent;
-            const origIdx = pendingQueue[selectedQueueIndex].originalIndex;
-            parsedKirtans[origIdx].title = newTitle; parsedKirtans[origIdx].content = newContent;
-            renderQueue();
-            const el = listContainer.querySelector('[data-idx="' + origIdx + '"] .k-title');
-            if (el) el.textContent = newTitle;
-
-            const btn = document.getElementById('save-pending-btn'); const oldText = btn.innerHTML;
-            btn.innerHTML = "✓ સેવ થઈ ગયું";
-            btn.classList.replace('bg-amber-100', 'bg-green-100'); btn.classList.replace('dark:bg-slate-700', 'dark:bg-green-800');
-            btn.classList.replace('dark:text-amber-200', 'dark:text-white');
-            setTimeout(() => {
-                btn.innerHTML = oldText;
-                btn.classList.replace('bg-green-100', 'bg-amber-100'); btn.classList.replace('dark:bg-green-800', 'dark:bg-slate-700');
-                btn.classList.replace('dark:text-white', 'dark:text-amber-200');
-            }, 1500);
-        });
-
-        document.getElementById('make-live-btn').addEventListener('click', () => {
-            if (selectedQueueIndex === -1) return;
-            const item = pendingQueue[selectedQueueIndex];
-            liveTitle.value = item.title; liveContent.value = item.content;
-            setLiveHighlight(item.originalIndex);
-            generateSlides(true); removeFromQueue(selectedQueueIndex, null);
-        });
-
-        function setLiveDirectly(idx) {
-            liveTitle.value = parsedKirtans[idx].title; liveContent.value = parsedKirtans[idx].content;
-            setLiveHighlight(idx);
-            generateSlides(true);
-        }
-
-        // --- 5. Slide Generation & LED Push ---
-        function splitLongLine(line) {
-            if (line.length < MIN_SPLIT_LEN) return [line];
-            const pieces = line.split(/(?<=[,;:])\s*/).map(p => p.trim()).filter(p => p !== '');
-            return pieces.length ? pieces : [line];
-        }
-
-        function generateSlides(resetIndex = false) {
-            const title = liveTitle.value; const text = liveContent.value;
-            currentSlides = []; currentSlides.push(title);
-            slideCache = [];
-            const rawLines = text.split('\n').map(l => l.trim()).filter(l => l !== '');
-            const lines = [];
-            rawLines.forEach(l => { splitLongLine(l).forEach(p => lines.push(p)); });
-            for (let i = 0; i < lines.length; i += 2) {
-                let slideText = lines[i];
-                if (i + 1 < lines.length) slideText += '\n' + lines[i + 1];
-                currentSlides.push(slideText);
-            }
-            if (resetIndex) { currentSlideIndex = 0; }
-            else { currentSlideIndex = Math.min(currentSlideIndex, Math.max(0, currentSlides.length - 1)); }
-            pushToLED();
-        }
-
-        document.getElementById('update-live-btn').addEventListener('click', () => {
-            if (liveIndex !== -1) { parsedKirtans[liveIndex].title = liveTitle.value; parsedKirtans[liveIndex].content = liveContent.value; }
-            generateSlides(false);
-        });
-
-        function buildSlideHtml(slideText) {
-            const lines = slideText.split('\n');
-            let gujHtml = ''; let engHtml = '';
-            lines.forEach(line => {
-                if(line.trim() !== '') {
-                    const guj = escapeHtml(line); const eng = escapeHtml(transliterate(line));
-                    gujHtml += `<div class="guj-text text-fit">${guj}</div>`;
-                    engHtml += `<div class="eng-text text-fit">${eng}</div>`;
-                }
-            });
-            return `
-                <div class="lang-block">
-                    ${gujHtml}
-                </div>
-                <div class="divider"></div>
-                <div class="lang-block">
-                    ${engHtml}
-                </div>`;
-        }
-
-        function pushToLED() {
-            if (currentSlides.length === 0) { slideStatus.textContent = `0 / 0`; return; }
-            slideStatus.textContent = `${currentSlideIndex + 1} / ${currentSlides.length}`;
-            if (!slideCache[currentSlideIndex]) slideCache[currentSlideIndex] = buildSlideHtml(currentSlides[currentSlideIndex]);
-            const htmlContent = slideCache[currentSlideIndex];
-            const ts = Date.now();
-
-            sendToLED({ type: 'state', html: htmlContent, timestamp: ts });
-
-            try {
-                localStorage.setItem('kirtan_led_state', JSON.stringify({ html: htmlContent, timestamp: ts }));
-            } catch (e) {}
-        }
-
-        document.getElementById('prev-btn').addEventListener('click', () => { if (currentSlideIndex > 0) { currentSlideIndex--; pushToLED(); }});
-        document.getElementById('next-btn').addEventListener('click', () => { if (currentSlideIndex < currentSlides.length - 1) { currentSlideIndex++; pushToLED(); }});
-        document.addEventListener('keydown', (e) => {
-            if(e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-            if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); document.getElementById('next-btn').click(); }
-            if (e.key === 'ArrowLeft') { e.preventDefault(); document.getElementById('prev-btn').click(); }
-        });
-
-        // --- 6. Extended Display API & LED Window ---
-        document.getElementById('open-led-btn').addEventListener('click', async () => {
-            let winFeatures = 'width=1280,height=720';
-
-            if ('getScreenDetails' in window) {
-                try {
-                    const screenDetails = await window.getScreenDetails();
-                    const extScreen = screenDetails.screens.find(s => s !== screenDetails.currentScreen);
-                    if (extScreen) {
-                        winFeatures = `left=${extScreen.availLeft},top=${extScreen.availTop},width=${extScreen.availWidth},height=${extScreen.availHeight}`;
-                    }
-                } catch (err) {
-                    console.warn("Screen Details API permission denied or failed. Using fallback.", err);
-                }
-            }
-
-            ledWin = window.open('', 'LEDWindow', winFeatures);
-            if(!ledWin) { alert("પોપ-અપ બ્લોક થયેલ છે. કૃપા કરીને બ્રાઉઝરમાં પોપ-અપ મંજૂરી આપો."); return; }
-
-            ledWin.document.open();
-            ledWin.document.write(`
-                <!DOCTYPE html>
-                <html>
-                <head>
-                    <meta charset="UTF-8">
-                    <title>Kirtan LED View</title>
-                    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Gujarati:wght@700&display=swap" rel="stylesheet">
-                    <style>
-                        body {
-                            margin: 0; padding: 0; height: 100vh; width: 100vw;
-                            display: flex; flex-direction: column; justify-content: center; align-items: center;
-                            overflow: hidden; cursor: default; transition: background-color 0.5s;
-                        }
-                        .content-wrapper {
-                            width: 95%; display: flex; flex-direction: column;
-                            align-items: center; gap: 4vh;
-                        }
-                        .lang-block {
-                            display: flex; flex-direction: column; align-items: center; width: 100%; gap: 1.5vh;
-                        }
-                        .text-fit {
-                            white-space: nowrap; text-align: center;
-                            width: max-content; line-height: 1.25;
-                        }
-                        .guj-text { font-family: 'Bhujmandir Hari', 'Noto Sans Gujarati', sans-serif; font-weight: 700; }
-                        .eng-text { font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-weight: 600; }
-                        .divider {
-                            width: 80%; height: 2px; border-radius: 50%;
-                        }
-                        .fs-hint {
-                            position: absolute; top: 10px; right: 10px; font-family: sans-serif; font-size: 12px;
-                            padding: 5px 10px; border-radius: 4px; pointer-events: none; transition: opacity 0.5s;
-                        }
-
-                        body.dark-theme { background-color: #000000; }
-                        body.dark-theme .guj-text { color: #ffffff; }
-                        body.dark-theme .eng-text { color: #fbbf24; }
-                        body.dark-theme .divider { background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent); }
-                        body.dark-theme .fs-hint { color: rgba(255,255,255,0.3); border: 1px solid rgba(255,255,255,0.2); }
-
-                        body.light-theme { background-color: #ffffff; }
-                        body.light-theme .guj-text { color: #1e3a8a; }
-                        body.light-theme .eng-text { color: #c2410c; }
-                        body.light-theme .divider { background: linear-gradient(90deg, transparent, rgba(0,0,0,0.2), transparent); }
-                        body.light-theme .fs-hint { color: rgba(0,0,0,0.3); border: 1px solid rgba(0,0,0,0.2); }
-                    </style>
-                </head>
-                <body class="dark-theme">
-                    <div class="fs-hint" id="fs-hint">Double Click to Fullscreen</div>
-                    <div class="content-wrapper" id="display-area">
-                        <div class="lang-block">
-                            <div class="guj-text text-fit">શ્રી સ્વામિનારાયણ ભગવાનની જય</div>
-                        </div>
-                        <div class="divider"></div>
-                        <div class="lang-block">
-                            <div class="eng-text text-fit">Shree Swaminarayan Bhagwanni Jay</div>
-                        </div>
-                    </div>
-
-                    <script>
-                        document.body.addEventListener('dblclick', function () {
-                            if (!document.fullscreenElement) {
-                                document.documentElement.requestFullscreen().catch(function (err) {
-                                    console.log("Error attempting to enable fullscreen:", err);
-                                });
-                            } else { document.exitFullscreen(); }
-                        });
-
-                        setTimeout(function () {
-                            var hint = document.getElementById('fs-hint');
-                            if (hint) hint.style.opacity = '0';
-                        }, 5000);
-
-                        function applyTheme(themeName) {
-                            if (themeName === 'light') {
-                                document.body.classList.remove('dark-theme');
-                                document.body.classList.add('light-theme');
-                            } else {
-                                document.body.classList.remove('light-theme');
-                                document.body.classList.add('dark-theme');
-                            }
-                        }
-                        applyTheme(localStorage.getItem('kirtan_led_theme') || 'dark');
-
-                        function fitText() {
-                            var area = document.getElementById('display-area');
-                            var maxW = window.innerWidth * 0.94, maxH = window.innerHeight * 0.92;
-                            var guj = [].slice.call(area.querySelectorAll('.guj-text'));
-                            var eng = [].slice.call(area.querySelectorAll('.eng-text'));
-
-                            function best(els, cap) {
-                                if (!els.length) return 0;
-                                els.forEach(function (e) { e.style.fontSize = '100px'; });
-                                var w = 0;
-                                els.forEach(function (e) { if (e.scrollWidth > w) w = e.scrollWidth; });
-                                if (!w) return 10;
-                                var s = Math.floor(100 * maxW / w);
-                                return Math.max(10, Math.min(s, Math.floor(cap)));
-                            }
-                            var g = best(guj, window.innerHeight * 0.35);
-                            var e = best(eng, window.innerHeight * 0.28);
-                            function apply() {
-                                guj.forEach(function (x) { x.style.fontSize = g + 'px'; });
-                                eng.forEach(function (x) { x.style.fontSize = e + 'px'; });
-                            }
-                            apply();
-                            
-                            var guard = 0;
-                            while (guard++ < 8 && guj.concat(eng).some(function (x) { return x.scrollWidth > maxW; })) {
-                                g = Math.max(10, Math.floor(g * 0.97)); e = Math.max(10, Math.floor(e * 0.97)); apply();
-                            }
-                            var h = area.getBoundingClientRect().height;
-                            if (h > maxH) { var f = maxH / h; g = Math.floor(g * f); e = Math.floor(e * f); apply(); }
-                        }
-
-                        var lastTs = 0;
-                        function render(html, ts) {
-                            if (ts && ts <= lastTs) return;
-                            if (ts) lastTs = ts;
-                            document.getElementById('display-area').innerHTML = html;
-                            requestAnimationFrame(fitText);
-                        }
-
-                        window.addEventListener('message', function (ev) {
-                            var d = ev.data;
-                            if (!d || !d.kirtanLed) return;
-                            if (d.type === 'state') render(d.html, d.timestamp);
-                            if (d.type === 'theme') applyTheme(d.theme);
-                        });
-
-                        window.addEventListener('storage', function (e) {
-                            if (e.key === 'kirtan_led_state' && e.newValue) {
-                                var state = JSON.parse(e.newValue);
-                                render(state.html, state.timestamp);
-                            }
-                            if (e.key === 'kirtan_led_theme' && e.newValue) {
-                                applyTheme(e.newValue);
-                            }
-                        });
-
-                        var rzTimer = null;
-                        window.addEventListener('resize', function () {
-                            clearTimeout(rzTimer);
-                            rzTimer = setTimeout(fitText, 120);
-                        });
-                        requestAnimationFrame(fitText);
-                        document.fonts.ready.then(fitText);
-                    <\/script>
-                </body>
-                </html>
-            `);
-            ledWin.document.close();
-
-            setTimeout(() => {
-                sendToLED({ type: 'theme', theme: htmlElement.classList.contains('dark') ? 'dark' : 'light' });
-                if (currentSlides.length) pushToLED();
-            }, 150);
-        });
-    </script>
+  </div></dialog>
+
+  <!-- સેટિંગ્સ -->
+  <dialog id="dlg-set"><div class="dlg-card">
+    <div class="dlg-h"><span class="grow">સેટિંગ્સ</span></div>
+    <div class="dlg-b">
+      <div class="sec-t">GitHub (ઓટોમેટિક સેવ)</div>
+      <div class="row2"><div><label for="gh-user">GitHub Username</label><input type="text" id="gh-user" autocomplete="off"></div><div><label for="gh-repo">Repository</label><input type="text" id="gh-repo" autocomplete="off"></div></div>
+      <div class="row2"><div><label for="gh-branch">Branch (ખાલી = default)</label><input type="text" id="gh-branch" autocomplete="off" placeholder="main"></div><div><label for="gh-path">ફાઇલનો path</label><input type="text" id="gh-path" autocomplete="off" placeholder="kirtans.txt"></div></div>
+      <label for="gh-token">Personal Access Token</label><input type="password" id="gh-token" autocomplete="off">
+      <div class="hint">સુરક્ષા માટે <b>Fine-grained token</b> બનાવો: ફક્ત આ એક repository, અને ફક્ત <b>Contents → Read and write</b>. ટોકન આ બ્રાઉઝરમાં જ સચવાય છે.</div>
+      <div style="display:flex;gap:10px;align-items:center;margin-top:8px"><button id="gh-test" class="btn btn-ghost btn-sm">કનેક્શન ચકાસો</button><span class="hint" id="gh-result"></span></div>
+      <label class="opt" style="margin-top:6px"><span class="switch"><input type="checkbox" id="st-auto"><i></i></span><div>ફેરફાર ઓટોમેટિક GitHub પર સેવ કરો<span class="d">એડિટ પછી થોડી સેકન્ડમાં સેવ. ઓફલાઇન હો તો નેટ આવતા સેવ થશે.</span></div></label>
+
+      <div class="sec-t">સ્લાઇડ</div>
+      <label class="opt"><span class="switch"><input type="checkbox" id="st-split"><i></i></span><div>અલ્પવિરામ (, ; :) પર લીટી તોડો<span class="d">લાંબી લીટી આપમેળે બે ભાગમાં વહેંચાય છે.</span></div></label>
+      <label class="opt"><span class="switch"><input type="checkbox" id="st-blank"><i></i></span><div>ખાલી લીટી = નવી સ્લાઇડ<span class="d">કડી/અંતરા અલગ સ્લાઇડથી શરૂ થાય.</span></div></label>
+
+      <div class="sec-t">અંગ્રેજી ઉચ્ચાર સુધારણા</div>
+      <div class="hint">ખોટા ઉચ્ચારવાળા શબ્દ માટે દરેક લીટીમાં લખો: <code>ગુજરાતી શબ્દ=Roman</code> (ફક્ત આ ડિવાઇસ પર સચવાય છે)</div>
+      <textarea id="st-exc" rows="4" placeholder="નીલકંઠ=Neelkanth"></textarea>
+
+      <div class="sec-t">બેકઅપ</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button id="st-export" class="btn btn-ghost btn-sm"></button>
+        <button id="st-import" class="btn btn-ghost btn-sm">ફાઇલ ખોલો (kirtans.txt)</button>
+        <input type="file" id="st-file" accept=".txt,text/plain" hidden>
+      </div>
+      <div class="hint" id="st-offline"></div>
+    </div>
+    <div class="dlg-f"><span class="grow"></span><button id="set-close" class="btn btn-primary">સેવ કરો</button></div>
+  </div></dialog>
+
+  <!-- મેળ ન ખાવાનો સંવાદ -->
+  <dialog id="dlg-conf"><div class="dlg-card">
+    <div class="dlg-h">GitHub પરની ફાઇલ બદલાયેલી છે</div>
+    <div class="dlg-b"><p style="margin:0">તમારા ફેરફાર સેવ થાય તે પહેલાં GitHub પરની <b>kirtans.txt</b> બીજા કોઈએ (અથવા બીજા ડિવાઇસે) બદલી છે. કયું વર્ઝન રાખવું?</p>
+      <p class="hint" style="margin:6px 0 0">ત્યાં સુધી ઓટો-સેવ થોભેલું છે.</p></div>
+    <div class="dlg-f">
+      <button id="cf-later" class="btn btn-ghost">પછી નક્કી કરીશ</button><span class="grow"></span>
+      <button id="cf-theirs" class="btn btn-danger">GitHub નું લો (મારા ફેરફાર જશે)</button>
+      <button id="cf-mine" class="btn btn-primary">મારું રાખો (GitHub પર લખો)</button>
+    </div>
+  </div></dialog>
+
+  <div class="toasts" id="toasts" aria-live="polite"></div>
+</div>
+
+<div id="led-root" hidden></div>
+
+<script>
+'use strict';
+/* =====================================================================
+   કીર્તન કંટ્રોલ પેનલ — એક જ ફાઇલ. LED વ્યૂ પણ આ જ ફાઇલ (#led) છે.
+   ===================================================================== */
+const $ = (s, r = document) => r.querySelector(s);
+const IS_LED = location.hash === '#led';
+const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+const LS = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : v; } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem(k, v); return true; } catch (e) { return false; } },
+  getJSON(k, d) { try { const v = JSON.parse(localStorage.getItem(k)); return v == null ? d : v; } catch (e) { return d; } },
+  setJSON(k, v) { return LS.set(k, JSON.stringify(v)); }
+};
+
+/* ---------- આઇકોન ---------- */
+const ICONS = {
+  play: '<polygon points="6 3 20 12 6 21 6 3"/>',
+  plus: '<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>',
+  edit: '<path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>',
+  trash: '<polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>',
+  x: '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>',
+  left: '<polyline points="15 18 9 12 15 6"/>',
+  right: '<polyline points="9 18 15 12 9 6"/>',
+  monitor: '<rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>',
+  sun: '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>',
+  moon: '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>',
+  sliders: '<line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/>',
+  cloud: '<path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/>',
+  check: '<polyline points="20 6 9 17 4 12"/>',
+  alert: '<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
+  search: '<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>',
+  eyeoff: '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>',
+  grip: '<circle cx="9" cy="6" r="1"/><circle cx="15" cy="6" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="9" cy="18" r="1"/><circle cx="15" cy="18" r="1"/>',
+  download: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>',
+  refresh: '<polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>'
+};
+const ic = n => '<svg class="ic" viewBox="0 0 24 24" aria-hidden="true">' + ICONS[n] + '</svg>';
+
+/* ---------- ગુજરાતી → Roman (મૂળ કોડની જ પદ્ધતિ + ૐ અને યુઝર અપવાદ) ---------- */
+const LONG_A = false;
+const G_CONS = {'ક':'k','ખ':'kh','ગ':'g','ઘ':'gh','ઙ':'ng','ચ':'ch','છ':'chh','જ':'j','ઝ':'jh','ઞ':'ny','ટ':'t','ઠ':'th','ડ':'d','ઢ':'dh','ણ':'n','ત':'t','થ':'th','દ':'d','ધ':'dh','ન':'n','પ':'p','ફ':'f','બ':'b','ભ':'bh','મ':'m','ય':'y','ર':'r','લ':'l','ળ':'l','વ':'v','શ':'sh','ષ':'sh','સ':'s','હ':'h'};
+const G_VOW = {'અ':'a','આ':LONG_A?'aa':'a','ઇ':'i','ઈ':'ee','ઉ':'u','ઊ':'oo','ઋ':'ru','ઍ':'e','એ':'e','ઐ':'ai','ઑ':'o','ઓ':'o','ઔ':'au'};
+const G_MATRA = {'ા':LONG_A?'aa':'a','િ':'i','ી':'ee','ુ':'u','ૂ':'oo','ૃ':'ru','ૅ':'e','ે':'e','ૈ':'ai','ૉ':'o','ો':'o','ૌ':'au'};
+const G_DIGIT = {'૦':'0','૧':'1','૨':'2','૩':'3','૪':'4','૫':'5','૬':'6','૭':'7','૮':'8','૯':'9'};
+const G_EXC = {'શ્રી':'shree','શ્રીજી':'shreeji','સ્વામિનારાયણ':'swaminarayan','ભગવાન':'bhagwan','જય':'jay','મહારાજ':'maharaj','હરિ':'hari','કૃષ્ણ':'krishna','ઘનશ્યામ':'ghanshyam','સહજાનંદ':'sahajanand'};
+let USER_EXC = {};
+
+function gujWord(word) {
+  word = word.replace(/[‌‍઼]/g, '');
+  if (!word) return '';
+  if (USER_EXC[word]) return USER_EXC[word];
+  if (G_EXC[word]) return G_EXC[word];
+  const chars = [...word], syl = [];
+  let cl = [];
+  for (let i = 0; i < chars.length; i++) {
+    const ch = chars[i], nx = chars[i + 1];
+    if (G_CONS[ch] !== undefined) {
+      let r = G_CONS[ch];
+      if (ch === 'વ' && cl[cl.length - 1] === 's') r = 'w';
+      if (ch === 'ઞ' && cl[cl.length - 1] === 'j') { cl.pop(); r = 'gn'; }
+      cl.push(r);
+      if (nx === '્') { i++; continue; }
+      if (G_MATRA[nx] !== undefined) { syl.push({ cs: cl, v: G_MATRA[nx], fixed: true }); i++; }
+      else syl.push({ cs: cl, v: 'a', fixed: false });
+      cl = [];
+    } else if (G_VOW[ch] !== undefined) {
+      syl.push({ cs: [], v: G_VOW[ch], fixed: true });
+    } else if (ch === 'ં' || ch === 'ઁ') {
+      const s = syl[syl.length - 1];
+      if (s) { s.coda = 'પફબભમ'.includes(nx || '#') ? 'm' : 'n'; s.fixed = true; }
+    } else if (ch === 'ઃ') {
+      const s = syl[syl.length - 1];
+      if (s) { s.coda = 'h'; s.fixed = true; }
+    } else if (G_DIGIT[ch] !== undefined) {
+      syl.push({ cs: [], v: G_DIGIT[ch], fixed: true });
+    }
+  }
+  if (cl.length) syl.push({ cs: cl, v: '', fixed: true });
+  const n = syl.length;
+  for (let i = n - 1; i >= 0; i--) {
+    const s = syl[i];
+    if (s.fixed || s.v !== 'a' || !s.cs.length) continue;
+    if (i === n - 1) {
+      if (n === 1) continue;
+      const last = s.cs[s.cs.length - 1];
+      if (s.cs.length > 1 && ['r', 'y', 'v', 'w'].includes(last)) continue;
+      s.v = '';
+    } else if (i > 0 && syl[i - 1].v !== '' && syl[i + 1].v !== '') {
+      s.v = '';
+    }
+  }
+  return syl.map(s => s.cs.join('') + s.v + (s.coda || '')).join('');
+}
+function translit(str) {
+  if (!str) return '';
+  const out = str.replace(/ૐ/g, ' Om ').replace(/[઀-૿‌‍]+/g, w => gujWord(w)).replace(/ {2,}/g, ' ').trim();
+  return out.charAt(0).toUpperCase() + out.slice(1);
+}
+function parseExceptions(txt) {
+  const m = {};
+  String(txt || '').split('\n').forEach(l => { const i = l.indexOf('='); if (i > 0) { const k = l.slice(0, i).trim(), v = l.slice(i + 1).trim(); if (k && v) m[k] = v; } });
+  return m;
+}
+
+/* ---------- LED વ્યૂ (પ્રિવ્યૂ અને બહારની વિન્ડો બંને આ જ વાપરે) ---------- */
+const WELCOME = { mode: 'slide', guj: ['શ્રી સ્વામિનારાયણ ભગવાનની જય'], eng: ['Shree Swaminarayan Bhagwanni Jay'], showEng: true, theme: 'dark', scale: 100 };
+function createLedView(root) {
+  root.classList.add('led', 'dark');
+  root.innerHTML = '<div class="led-area"><div class="led-lang led-guj"></div><div class="led-divider"></div><div class="led-lang led-eng"></div></div>';
+  const area = root.firstChild, gujEl = area.children[0], divEl = area.children[1], engEl = area.children[2];
+  let st = null;
+  function fill(el, lines) {
+    el.textContent = '';
+    lines.forEach(t => { const d = document.createElement('div'); d.className = 'led-line'; d.textContent = t; el.appendChild(d); });
+  }
+  function fit() {
+    if (!st || st.mode === 'blank') return;
+    const W = root.clientWidth, H = root.clientHeight;
+    if (!W || !H) return;
+    const showEng = engEl.style.display !== 'none';
+    const maxW = W * 0.94, maxH = H * 0.9, scale = (st.scale || 100) / 100;
+    area.style.setProperty('--gap', Math.max(4, H * 0.035) + 'px');
+    const gl = [...gujEl.children], el = showEng ? [...engEl.children] : [];
+    const base = els => { els.forEach(x => x.style.fontSize = '100px'); let w = 1; els.forEach(x => { w = Math.max(w, x.scrollWidth); }); return 100 * maxW / w; };
+    let g = Math.max(6, Math.min(base(gl), H * (showEng ? 0.30 : 0.40)) * scale);
+    let e = showEng ? Math.max(6, Math.min(base(el), H * 0.24) * scale) : 0;
+    const apply = () => { gl.forEach(x => x.style.fontSize = g + 'px'); el.forEach(x => x.style.fontSize = e + 'px'); };
+    apply();
+    const h = area.getBoundingClientRect().height;
+    if (h > maxH) { const f = maxH / h; g *= f; e *= f; apply(); }
+  }
+  function render(s) {
+    st = s;
+    root.classList.toggle('dark', s.theme !== 'light');
+    root.classList.toggle('light', s.theme === 'light');
+    if (s.mode === 'blank') { area.style.visibility = 'hidden'; return; }
+    area.style.visibility = 'visible';
+    const showEng = !!s.showEng && (s.eng || []).some(Boolean);
+    fill(gujEl, s.guj || []);
+    fill(engEl, showEng ? s.eng : []);
+    divEl.style.display = showEng ? '' : 'none';
+    engEl.style.display = showEng ? '' : 'none';
+    fit();
+  }
+  if ('ResizeObserver' in window) new ResizeObserver(() => fit()).observe(root);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit);
+  return { render, fit, root };
+}
+
+/* ---------- LED વિન્ડો મોડ ---------- */
+function startLed() {
+  document.title = 'કીર્તન LED વ્યૂ';
+  const root = $('#led-root');
+  root.hidden = false;
+  const view = createLedView(root);
+  const hint = document.createElement('div');
+  hint.className = 'led-hint';
+  hint.textContent = 'ફુલસ્ક્રીન માટે ક્લિક કરો  ·  F';
+  root.appendChild(hint);
+  setTimeout(() => { hint.style.opacity = '0'; }, 6000);
+
+  let last = 0;
+  function apply(m) {
+    if (!m || !m.ts || m.ts <= last) return;
+    last = m.ts;
+    view.render(m);
+  }
+  const saved = LS.getJSON('kc_led_state', null);
+  if (saved) apply(saved); else view.render(WELCOME);
+
+  const bc = 'BroadcastChannel' in window ? new BroadcastChannel('kirtan-led') : null;
+  if (bc) {
+    bc.onmessage = e => { if (e.data && e.data.type === 'state') apply(e.data); };
+    bc.postMessage({ type: 'led-hello' });
+    setInterval(() => bc.postMessage({ type: 'led-ping' }), 1500);
+  }
+  window.addEventListener('storage', e => {
+    if (e.key === 'kc_led_state' && e.newValue) { try { apply(JSON.parse(e.newValue)); } catch (x) {} }
+  });
+  const toggleFs = () => {
+    if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => {});
+    else document.exitFullscreen();
+  };
+  root.addEventListener('click', toggleFs);
+  document.addEventListener('keydown', e => { if (e.key === 'f' || e.key === 'F') toggleFs(); });
+  let idle; const wake = () => { root.classList.remove('hide-cursor'); clearTimeout(idle); idle = setTimeout(() => root.classList.add('hide-cursor'), 2500); };
+  document.addEventListener('mousemove', wake); wake();
+}
+
+/* =====================================================================
+   કંટ્રોલર
+   ===================================================================== */
+function startController() {
+  const el = {};
+  ['search','list','count','qlist','qcount','qnext','qclear','livetitle','stageh','counter','prev','next','blank','slides','pv','ledchip','sync','syncIcon','syncText','theme','openled','openledIcon','settingsbtn','newbtn','grid','tabbar','toasts','searchIcon'].forEach(id => el[id] = document.getElementById(id));
+  const dEdit = $('#dlg-edit'), dSet = $('#dlg-set'), dConf = $('#dlg-conf');
+
+  const DEF = { lines: 2, splitPunct: true, blankBreak: false, showEng: true, ledTheme: 'dark', scale: 100, autoSave: true, exceptions: '' };
+  const S = {
+    kirtans: [], sha: null, dirty: false,
+    queue: [], live: null, slides: [], idx: 0, blank: false,
+    set: Object.assign({}, DEF, LS.getJSON('kc_settings', {}))
+  };
+  USER_EXC = parseExceptions(S.set.exceptions);
+  const uid = () => Math.random().toString(36).slice(2, 9) + Date.now().toString(36).slice(-4);
+  const byId = id => S.kirtans.find(k => k.id === id);
+  const firstLine = t => (String(t).split('\n').find(l => l.trim()) || '').trim();
+
+  /* ----- static icons ----- */
+  el.searchIcon.innerHTML = ic('search');
+  el.openledIcon.innerHTML = ic('monitor');
+  el.settingsbtn.innerHTML = ic('sliders');
+  el.newbtn.innerHTML = ic('plus') + ' નવું કીર્તન ઉમેરો';
+  el.prev.innerHTML = ic('left') + ' પાછળ';
+  el.blank.innerHTML = ic('eyeoff') + ' સ્ક્રીન ખાલી';
+  el.qnext.innerHTML = ic('play') + ' આગલું કીર્તન Live કરો';
+  el.qclear.innerHTML = ic('trash');
+  $('#st-export').innerHTML = ic('download') + ' બેકઅપ ડાઉનલોડ (kirtans.txt)';
+  $('#ed-del').innerHTML = ic('trash') + ' ડિલીટ';
+
+  /* ----- toast ----- */
+  function toast(msg, o = {}) {
+    const t = document.createElement('div');
+    t.className = 'toast';
+    t.textContent = msg;
+    if (o.label) { const b = document.createElement('button'); b.textContent = o.label; b.onclick = () => { o.onClick && o.onClick(); t.remove(); }; t.appendChild(b); }
+    el.toasts.appendChild(t);
+    setTimeout(() => t.remove(), o.ms || 3600);
+  }
+
+  /* ----- theme ----- */
+  function applyTheme() {
+    const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    el.theme.innerHTML = ic(dark ? 'sun' : 'moon');
+  }
+  el.theme.onclick = () => {
+    const t = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', t);
+    LS.set('theme', t); applyTheme();
+  };
+  applyTheme();
+
+  /* ----- parse / serialize (ફાઇલ ફોર્મેટ મૂળ જેવું જ) ----- */
+  function parseKirtans(text) {
+    const out = [];
+    text = String(text).replace(/\r\n?/g, '\n');
+    text.split('Chapter_name -').forEach(part => {
+      if (part.trim() === '') return;
+      const lines = part.split('\n');
+      let title = lines[0].trim();
+      if (title.startsWith('-')) title = title.substring(1).trim();
+      const content = lines.slice(1).join('\n').trim();
+      if (title || content) out.push({ title: title || 'અજ્ઞાત', content });
+    });
+    return out;
+  }
+  function serialize() { return S.kirtans.map(k => `Chapter_name - ${k.title}\n${k.content}\n\n`).join(''); }
+
+  /* ----- સ્થાનિક કેશ (ઓફલાઇન માટે) ----- */
+  let quotaWarned = false;
+  let cacheTimer = null;
+  function persistCache() {
+    clearTimeout(cacheTimer);
+    cacheTimer = setTimeout(persistCacheNow, 250);
+  }
+  function persistCacheNow() {
+    const ok = LS.setJSON('kc_cache', { kirtans: S.kirtans, sha: S.sha, dirty: S.dirty });
+    if (!ok && !quotaWarned) { quotaWarned = true; toast('⚠ ડિવાઇસ સ્ટોરેજ ભરાઈ ગયું — ઓફલાઇન કેશ સેવ ન થયો', { ms: 6000 }); }
+  }
+  function saveState() { LS.setJSON('kc_state', { queue: S.queue, live: S.live, idx: S.idx, blank: S.blank }); }
+
+  function adopt(text) {
+    const old = new Map();
+    S.kirtans.forEach(k => { if (!old.has(k.title)) old.set(k.title, k.id); });
+    S.kirtans = parseKirtans(text).map(k => ({ id: old.get(k.title) || uid(), title: k.title, content: k.content }));
+    S.queue = S.queue.filter(id => byId(id));
+    persistCache(); renderList(); renderQueue(); saveState();
+  }
+
+  /* =====================================================================
+     GitHub
+     ===================================================================== */
+  const gh = () => ({
+    user: LS.get('gh_user', '').trim(), repo: LS.get('gh_repo', '').trim(), token: LS.get('gh_token', '').trim(),
+    branch: LS.get('gh_branch', '').trim(), path: (LS.get('gh_path', '').trim() || 'kirtans.txt')
+  });
+  const ghOn = () => { const c = gh(); return !!(c.user && c.repo && c.token); };
+  const ghUrl = c => `https://api.github.com/repos/${encodeURIComponent(c.user)}/${encodeURIComponent(c.repo)}/contents/${c.path.split('/').map(encodeURIComponent).join('/')}`;
+  const ghHead = c => ({ 'Authorization': 'Bearer ' + c.token, 'Accept': 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' });
+  const ghErr = res => { const e = new Error('GitHub ' + res.status); e.status = res.status; return e; };
+  function utf8ToB64(s) { const b = new TextEncoder().encode(s); let bin = ''; for (let i = 0; i < b.length; i += 0x8000) bin += String.fromCharCode.apply(null, b.subarray(i, i + 0x8000)); return btoa(bin); }
+  function b64ToUtf8(s) { const bin = atob(s.replace(/\s/g, '')); return new TextDecoder().decode(Uint8Array.from(bin, c => c.charCodeAt(0))); }
+
+  async function ghGet() {
+    const c = gh();
+    const q = c.branch ? '?ref=' + encodeURIComponent(c.branch) : '';
+    const res = await fetch(ghUrl(c) + q, { headers: ghHead(c), cache: 'no-store' });
+    if (!res.ok) throw ghErr(res);
+    const data = await res.json();
+    let text;
+    if (data.encoding === 'base64' && data.content) text = b64ToUtf8(data.content);
+    else {
+      const r2 = await fetch(ghUrl(c) + q, { headers: Object.assign(ghHead(c), { Accept: 'application/vnd.github.raw+json' }), cache: 'no-store' });
+      if (!r2.ok) throw ghErr(r2);
+      text = await r2.text();
+    }
+    return { sha: data.sha, text };
+  }
+  async function ghPut(text, sha) {
+    const c = gh();
+    const body = { message: 'Kirtan Controller દ્વારા કીર્તન અપડેટ કર્યા', content: utf8ToB64(text) };
+    if (sha) body.sha = sha;
+    if (c.branch) body.branch = c.branch;
+    const res = await fetch(ghUrl(c), { method: 'PUT', headers: Object.assign(ghHead(c), { 'Content-Type': 'application/json' }), body: JSON.stringify(body) });
+    if (!res.ok) throw ghErr(res);
+    return res.json();
+  }
+
+  /* ----- સિંક સ્થિતિ ----- */
+  const F = { saving: false, conflict: false, err: '' };
+  let pendingRemote = null, saveTimer = null, pendingAgain = false;
+
+  function refreshSync() {
+    let cls, txt, icn;
+    if (!ghOn()) { cls = 'warn'; icn = 'alert'; txt = S.dirty ? 'ફેરફાર ફક્ત આ ડિવાઇસ પર · GitHub જોડો' : 'GitHub જોડાયું નથી'; }
+    else if (F.saving) { cls = 'busy'; icn = 'refresh'; txt = 'GitHub પર સેવ થઈ રહ્યું છે…'; }
+    else if (F.conflict) { cls = 'err'; icn = 'alert'; txt = 'GitHub સાથે મેળ નથી — ક્લિક કરો'; }
+    else if (F.err) { cls = 'err'; icn = 'alert'; txt = F.err; }
+    else if (!navigator.onLine) { cls = 'warn'; icn = 'cloud'; txt = S.dirty ? 'ઓફલાઇન · નેટ આવતા સેવ થશે' : 'ઓફલાઇન · ડેટા ડિવાઇસ પર છે'; }
+    else if (S.dirty) { cls = 'busy'; icn = 'refresh'; txt = 'સેવ થવાના બાકી…'; }
+    else { cls = 'ok'; icn = 'check'; txt = 'GitHub પર સેવ ✓'; }
+    el.sync.className = 'pill ' + cls;
+    el.syncIcon.innerHTML = ic(icn);
+    el.syncText.textContent = txt;
+    el.sync.title = txt;
+  }
+
+  function markDirty() {
+    S.dirty = true; F.err = '';
+    persistCache(); refreshSync(); schedulePush();
+  }
+  function schedulePush(delay = 2500) {
+    clearTimeout(saveTimer);
+    if (!S.set.autoSave || !ghOn() || F.conflict) return;
+    saveTimer = setTimeout(pushNow, delay);
+  }
+  function explain(e) {
+    if (e.status === 401) return 'ટોકન ખોટો કે એક્સપાયર થયો — સેટિંગ્સ તપાસો';
+    if (e.status === 403) return 'પરવાનગી/લિમિટની સમસ્યા (403) — ટોકન તપાસો';
+    if (e.status === 404) return 'Repo, branch કે ફાઇલ મળી નથી (404)';
+    if (e.status) return 'GitHub ભૂલ ' + e.status;
+    return 'GitHub સાથે કનેક્ટ થઈ શક્યું નથી — ફરી પ્રયત્ન થશે';
+  }
+  async function pushNow() {
+    if (!ghOn() || !S.dirty || F.conflict) { refreshSync(); return; }
+    if (F.saving) { pendingAgain = true; return; }
+    if (!navigator.onLine) { refreshSync(); return; }
+    F.saving = true; F.err = ''; refreshSync();
+    const text = serialize();
+    let ok = false;
+    try {
+      const r = await ghPut(text, S.sha);
+      S.sha = r.content.sha;
+      if (serialize() === text) S.dirty = false;
+      ok = true;
+    } catch (e) {
+      if (e.status === 409 || e.status === 422) {
+        try {
+          const r = await ghGet();
+          if (r.text.replace(/\r\n?/g, '\n').trim() === text.trim()) { S.sha = r.sha; S.dirty = false; ok = true; }
+          else { pendingRemote = r; F.conflict = true; showConflict(); }
+        } catch (e2) { F.err = explain(e2); }
+      } else F.err = explain(e);
+    }
+    F.saving = false;
+    persistCacheNow(); refreshSync();
+    if (ok && (pendingAgain || S.dirty)) { pendingAgain = false; schedulePush(800); }
+  }
+  async function syncDown(manual) {
+    if (!navigator.onLine) { refreshSync(); if (manual) toast('ઓફલાઇન છો'); return; }
+    try {
+      let text, sha = null;
+      if (ghOn()) { const r = await ghGet(); text = r.text; sha = r.sha; F.err = ''; }
+      else {
+        const res = await fetch('kirtans.txt', { cache: 'no-store' });
+        if (!res.ok) throw new Error('kirtans.txt');
+        text = await res.text();
+      }
+      handleRemote(text, sha);
+      if (manual) toast('✓ લેટેસ્ટ કીર્તન લોડ થયા');
+    } catch (e) {
+      if (ghOn()) F.err = explain(e);
+      if (!S.kirtans.length) el.list.innerHTML = '<div class="empty" style="color:var(--err)">કીર્તન લોડ થઈ શક્યા નહીં.<br>kirtans.txt ફાઇલ કે GitHub સેટિંગ્સ ચકાસો.</div>';
+    }
+    refreshSync();
+  }
+  function handleRemote(text, sha) {
+    const same = String(text).replace(/\r\n?/g, '\n').trim() === serialize().trim();
+    if (!S.dirty) {
+      if (!S.kirtans.length || (sha ? sha !== S.sha : !same)) adopt(text);
+      if (sha) S.sha = sha;
+      persistCache();
+    } else if (!ghOn()) {
+      /* ફક્ત સ્થાનિક ફેરફાર — દૂરની ફાઇલથી ભૂંસાવા ન દેવા */
+    } else if (sha && sha === S.sha) { schedulePush(500); }
+    else if (same) { S.sha = sha; S.dirty = false; persistCache(); }
+    else { pendingRemote = { text, sha }; F.conflict = true; showConflict(); }
+  }
+  function showConflict() { if (!dConf.open) dConf.showModal(); }
+  $('#cf-mine').onclick = () => { S.sha = pendingRemote.sha; F.conflict = false; dConf.close(); pushNow(); };
+  $('#cf-theirs').onclick = () => { adopt(pendingRemote.text); S.sha = pendingRemote.sha; S.dirty = false; F.conflict = false; persistCacheNow(); dConf.close(); refreshSync(); toast('GitHub નું વર્ઝન લોડ થયું'); };
+  $('#cf-later').onclick = () => dConf.close();
+
+  el.sync.onclick = () => {
+    if (F.conflict) return showConflict();
+    if (!ghOn()) return openSettings();
+    F.err = '';
+    if (S.dirty) pushNow(); else syncDown(true);
+    refreshSync();
+  };
+  window.addEventListener('online', () => { refreshSync(); if (S.dirty) pushNow(); else syncDown(); });
+  window.addEventListener('offline', refreshSync);
+  setInterval(() => { if (S.dirty && ghOn() && navigator.onLine && !F.saving && !F.conflict && S.set.autoSave) pushNow(); }, 30000);
+  document.addEventListener('visibilitychange', () => { if (document.hidden && S.dirty && S.set.autoSave) pushNow(); });
+  window.addEventListener('beforeunload', e => { persistCacheNow(); saveState(); if (S.dirty) { e.preventDefault(); e.returnValue = ''; } });
+
+  /* =====================================================================
+     સ્લાઇડ અને LED
+     ===================================================================== */
+  const pv = createLedView(el.pv);
+  const bc = 'BroadcastChannel' in window ? new BroadcastChannel('kirtan-led') : null;
+  let lastTs = 0, lastPing = 0, ledWin = null;
+
+  function splitLong(line) {
+    if (!S.set.splitPunct) return [line];
+    const p = line.split(/(?<=[,;:])\s*/).map(x => x.trim()).filter(Boolean);
+    return p.length ? p : [line];
+  }
+  function makeSlides(title, content) {
+    const out = [{ guj: [title], eng: [translit(title)], title: true }];
+    const blocks = S.set.blankBreak ? content.split(/\n\s*\n/) : [content];
+    const n = Math.max(1, S.set.lines | 0);
+    blocks.forEach(b => {
+      const lines = [];
+      b.split('\n').map(l => l.trim()).filter(Boolean).forEach(l => splitLong(l).forEach(p => lines.push(p)));
+      for (let i = 0; i < lines.length; i += n) {
+        const g = lines.slice(i, i + n);
+        out.push({ guj: g, eng: g.map(translit) });
+      }
+    });
+    return out;
+  }
+  function ledMsg() {
+    const sl = S.slides[S.idx];
+    lastTs = Math.max(Date.now(), lastTs + 1);
+    const base = { type: 'state', theme: S.set.ledTheme, showEng: S.set.showEng, scale: S.set.scale, ts: lastTs, mode: S.blank ? 'blank' : 'slide' };
+    return (S.live && sl) ? Object.assign(base, { guj: sl.guj, eng: sl.eng }) : Object.assign({}, WELCOME, base);
+  }
+  function pushLed() {
+    const m = ledMsg();
+    pv.render(m);
+    if (bc) bc.postMessage(m);
+    LS.set('kc_led_state', JSON.stringify(m));
+  }
+  function rebuildSlides(reset) {
+    if (S.live) {
+      S.slides = makeSlides(S.live.title, S.live.content);
+      S.idx = reset ? 0 : Math.min(S.idx, S.slides.length - 1);
+    } else { S.slides = []; S.idx = 0; }
+    S.blank = false;
+    renderSlideList(); renderStage(); pushLed(); renderList(); saveState();
+  }
+  function goLive(id) {
+    const k = byId(id);
+    if (!k) return;
+    S.live = { id: k.id, title: k.title, content: k.content };
+    rebuildSlides(true);
+  }
+  function goSlide(i) {
+    if (!S.live) return;
+    S.idx = Math.max(0, Math.min(S.slides.length - 1, i));
+    S.blank = false;
+    renderStage(); pushLed(); saveState();
+  }
+  function next() {
+    if (!S.live) { if (S.queue.length) liveFromQueue(); return; }
+    if (S.idx < S.slides.length - 1) goSlide(S.idx + 1);
+    else if (S.queue.length) liveFromQueue();
+    else toast('આ છેલ્લી સ્લાઇડ છે');
+  }
+  function prev() { if (S.live && S.idx > 0) goSlide(S.idx - 1); }
+  function toggleBlank() { S.blank = !S.blank; renderStage(); pushLed(); saveState(); }
+  function liveFromQueue(qi = 0) {
+    const id = S.queue[qi];
+    if (!id) return;
+    S.queue.splice(qi, 1);
+    goLive(id);
+    renderQueue();
+  }
+
+  el.next.onclick = next; el.prev.onclick = prev; el.blank.onclick = toggleBlank;
+  el.qnext.onclick = () => liveFromQueue(0);
+  el.qclear.onclick = () => {
+    if (!S.queue.length) return;
+    const bak = S.queue.slice(); S.queue = []; renderQueue(); renderList(); saveState();
+    toast('કતાર ખાલી કરી', { label: 'પાછી લાવો', onClick: () => { S.queue = bak; renderQueue(); renderList(); saveState(); } });
+  };
+
+  /* ----- સ્ટેજ UI ----- */
+  function renderStage() {
+    const has = !!S.live;
+    el.stageh.classList.toggle('idle', !has);
+    el.livetitle.textContent = has ? S.live.title : 'કોઈ કીર્તન Live નથી';
+    el.counter.textContent = has ? `${S.idx + 1} / ${S.slides.length}` : '0 / 0';
+    el.prev.disabled = !has || S.idx === 0;
+    const last = has && S.idx >= S.slides.length - 1;
+    const nq = S.queue.length ? byId(S.queue[0]) : null;
+    if (last && nq) el.next.innerHTML = '<span class="t">આગલું કીર્તન: ' + esc(nq.title) + '</span>' + ic('right');
+    else el.next.innerHTML = '<span class="t">આગળ</span>' + ic('right');
+    el.next.disabled = has ? (last && !S.queue.length) : !S.queue.length;
+    el.blank.classList.toggle('active', S.blank);
+    el.blank.lastChild.textContent = S.blank ? ' સ્ક્રીન પાછી લાવો' : ' સ્ક્રીન ખાલી';
+    el.slides.querySelectorAll('.s-item').forEach((b, i) => b.classList.toggle('on', i === S.idx));
+    const cur = el.slides.querySelector('.s-item.on');
+    if (cur) cur.scrollIntoView({ block: 'nearest' });
+    el.qnext.disabled = !S.queue.length;
+  }
+  function renderSlideList() {
+    if (!S.slides.length) { el.slides.innerHTML = '<div class="empty">ડાબી બાજુથી કીર્તન પસંદ કરીને <b>Live</b> દબાવો.</div>'; return; }
+    el.slides.innerHTML = S.slides.map((s, i) =>
+      `<button class="s-item" data-i="${i}"><span class="s-num">${s.title ? 'શી' : i}</span><span class="s-text"><div>${esc(s.guj.join(' / '))}</div><div class="e">${esc(s.eng.join(' / '))}</div></span></button>`).join('');
+  }
+  el.slides.addEventListener('click', e => { const b = e.target.closest('.s-item'); if (b) goSlide(+b.dataset.i); });
+
+  function syncQuick() {
+    $('#seg-lines').querySelectorAll('button').forEach(b => b.classList.toggle('on', +b.dataset.v === +S.set.lines));
+    $('#seg-theme').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.v === S.set.ledTheme));
+    $('#sw-eng').checked = !!S.set.showEng;
+    $('#rg-scale').value = S.set.scale;
+  }
+  function saveSettings() { LS.setJSON('kc_settings', S.set); }
+  $('#seg-lines').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; S.set.lines = +b.dataset.v; saveSettings(); syncQuick(); rebuildSlides(false); });
+  $('#seg-theme').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; S.set.ledTheme = b.dataset.v; saveSettings(); syncQuick(); pushLed(); });
+  $('#sw-eng').onchange = e => { S.set.showEng = e.target.checked; saveSettings(); pushLed(); };
+  $('#rg-scale').oninput = e => { S.set.scale = +e.target.value; saveSettings(); pushLed(); };
+
+  /* ----- લાઇબ્રેરી ----- */
+  function renderList() {
+    const term = el.search.value.trim().toLowerCase();
+    const rows = [];
+    let shown = 0;
+    S.kirtans.forEach(k => {
+      if (term && !(k.title.toLowerCase().includes(term) || k.content.toLowerCase().includes(term))) return;
+      shown++;
+      const isLive = S.live && S.live.id === k.id;
+      const qn = S.queue.filter(x => x === k.id).length;
+      rows.push(`<div class="k-item${isLive ? ' is-live' : ''}" data-id="${k.id}">
+        <div class="k-top"><div style="min-width:0;flex:1"><div class="k-title">${esc(k.title)}</div><div class="k-sub">${esc(firstLine(k.content))}</div></div>
+        ${isLive ? '<span class="tag tag-live">LIVE</span>' : ''}${qn ? `<span class="tag tag-q">કતાર${qn > 1 ? ' ×' + qn : ''}</span>` : ''}</div>
+        <div class="k-actions"><button data-act="live" class="btn btn-primary btn-sm">${ic('play')} Live</button><button data-act="queue" class="btn btn-queue btn-sm">${ic('plus')} કતારમાં</button><button data-act="edit" class="btn btn-ghost btn-icon btn-sm" title="એડિટ" aria-label="એડિટ">${ic('edit')}</button></div></div>`);
+    });
+    el.list.innerHTML = rows.join('') || `<div class="empty">${S.kirtans.length ? 'કોઈ કીર્તન મળ્યું નહીં.' : 'હજી કોઈ કીર્તન નથી. “નવું કીર્તન ઉમેરો” દબાવો.'}</div>`;
+    el.count.textContent = shown + ' / ' + S.kirtans.length;
+  }
+  let st = null;
+  el.search.addEventListener('input', () => { clearTimeout(st); st = setTimeout(renderList, 150); });
+  el.list.addEventListener('click', e => {
+    const b = e.target.closest('button[data-act]'); if (!b) return;
+    const id = b.closest('.k-item').dataset.id;
+    if (b.dataset.act === 'live') { goLive(id); if (matchMedia('(max-width:900px)').matches) setTab('stage'); }
+    else if (b.dataset.act === 'queue') { S.queue.push(id); renderQueue(); renderList(); renderStage(); saveState(); toast('કતારમાં ઉમેર્યું: ' + byId(id).title); }
+    else openEditor(id);
+  });
+
+  /* ----- કતાર ----- */
+  let dragFrom = -1;
+  function renderQueue() {
+    el.qcount.textContent = S.queue.length;
+    el.qnext.disabled = !S.queue.length; el.qclear.disabled = !S.queue.length;
+    if (!S.queue.length) { el.qlist.innerHTML = '<div class="empty">કતારમાં કોઈ કીર્તન નથી.<br>લાઇબ્રેરીમાંથી <b>કતારમાં</b> બટન દબાવો. ખેંચીને ક્રમ બદલી શકાય.</div>'; renderStage(); return; }
+    el.qlist.innerHTML = S.queue.map((id, i) => { const k = byId(id); return `<div class="q-item" draggable="true" data-i="${i}"><span class="grip">${ic('grip')}</span><span class="q-num">${i + 1}</span><div class="q-title">${esc(k ? k.title : '(કાઢી નાખેલું)')}</div><button class="btn btn-soft btn-icon btn-sm" data-qa="go" title="હમણાં Live કરો" aria-label="Live કરો">${ic('play')}</button><button class="btn btn-ghost btn-icon btn-sm" data-qa="rm" title="કતારમાંથી કાઢો" aria-label="કાઢો">${ic('x')}</button></div>`; }).join('');
+    renderStage();
+  }
+  el.qlist.addEventListener('click', e => {
+    const b = e.target.closest('button[data-qa]'); if (!b) return;
+    const i = +b.closest('.q-item').dataset.i;
+    if (b.dataset.qa === 'go') liveFromQueue(i);
+    else { S.queue.splice(i, 1); renderQueue(); renderList(); saveState(); }
+  });
+  el.qlist.addEventListener('dragstart', e => { const it = e.target.closest('.q-item'); if (!it) return; dragFrom = +it.dataset.i; it.classList.add('drag'); e.dataTransfer.effectAllowed = 'move'; try { e.dataTransfer.setData('text/plain', String(dragFrom)); } catch (x) {} });
+  el.qlist.addEventListener('dragend', () => { dragFrom = -1; el.qlist.querySelectorAll('.drag,.over').forEach(x => x.classList.remove('drag', 'over')); });
+  el.qlist.addEventListener('dragover', e => { const it = e.target.closest('.q-item'); if (!it || dragFrom < 0) return; e.preventDefault(); el.qlist.querySelectorAll('.over').forEach(x => x.classList.remove('over')); it.classList.add('over'); });
+  el.qlist.addEventListener('drop', e => {
+    const it = e.target.closest('.q-item'); if (!it || dragFrom < 0) return;
+    e.preventDefault();
+    const to = +it.dataset.i;
+    if (to !== dragFrom) { const [m] = S.queue.splice(dragFrom, 1); S.queue.splice(to, 0, m); }
+    dragFrom = -1; renderQueue(); saveState();
+  });
+
+  /* ----- એડિટર ----- */
+  let editingId = null, listTimer = null;
+  const edT = $('#ed-title'), edC = $('#ed-content'), edApply = $('#ed-apply'), edHint = $('#ed-hint');
+  function openEditor(id, isNew) {
+    const k = byId(id); if (!k) return;
+    editingId = id;
+    edT.value = k.title; edC.value = k.content;
+    edApply.hidden = !(S.live && S.live.id === id);
+    updateHint();
+    dEdit.showModal();
+    if (isNew) { edT.focus(); edT.select(); } else edC.focus();
+    edC.scrollTop = 0;
+  }
+  function updateHint() {
+    const n = edC.value.split('\n').filter(l => l.trim()).length;
+    edHint.textContent = n + ' લીટી' + (S.live && S.live.id === editingId ? ' · આ કીર્તન Live છે — બંધ કરતાં LED પર લાગુ થશે' : '');
+  }
+  function onEdit() {
+    const k = byId(editingId); if (!k) return;
+    k.title = edT.value; k.content = edC.value;
+    updateHint(); markDirty();
+    clearTimeout(listTimer); listTimer = setTimeout(renderList, 300);
+  }
+  edT.addEventListener('input', onEdit); edC.addEventListener('input', onEdit);
+  function applyEditToLive() {
+    const k = byId(editingId);
+    if (k && S.live && S.live.id === editingId && (S.live.title !== k.title || S.live.content !== k.content)) {
+      S.live = { id: k.id, title: k.title, content: k.content };
+      rebuildSlides(false);
+      toast('LED પર અપડેટ થયું');
+    }
+  }
+  edApply.onclick = applyEditToLive;
+  $('#ed-close').onclick = () => dEdit.close();
+  dEdit.addEventListener('close', () => {
+    clearTimeout(listTimer);
+    const k = byId(editingId);
+    if (!k) { editingId = null; renderList(); renderQueue(); return; }
+    if (k.title === 'નવું કીર્તન' && !k.content.trim()) { S.kirtans = S.kirtans.filter(x => x !== k); markDirty(); }
+    else { if (!k.title.trim()) k.title = 'અજ્ઞાત'; applyEditToLive(); }
+    editingId = null; renderList(); renderQueue();
+  });
+  $('#ed-del').onclick = () => {
+    const k = byId(editingId); if (!k) return;
+    const idx = S.kirtans.indexOf(k), qBak = S.queue.slice();
+    S.kirtans.splice(idx, 1); S.queue = S.queue.filter(x => x !== k.id);
+    markDirty(); const id = editingId; editingId = null; dEdit.close();
+    renderList(); renderQueue(); saveState();
+    toast('“' + k.title + '” ડિલીટ થયું', { label: 'પાછું લાવો', ms: 8000, onClick: () => { S.kirtans.splice(idx, 0, k); S.queue = qBak; markDirty(); renderList(); renderQueue(); saveState(); } });
+  };
+  el.newbtn.onclick = () => {
+    const k = { id: uid(), title: 'નવું કીર્તન', content: '' };
+    S.kirtans.unshift(k); markDirty(); renderList(); openEditor(k.id, true);
+  };
+
+  /* ----- સેટિંગ્સ ----- */
+  function openSettings() {
+    $('#gh-user').value = LS.get('gh_user', ''); $('#gh-repo').value = LS.get('gh_repo', '');
+    $('#gh-branch').value = LS.get('gh_branch', ''); $('#gh-path').value = LS.get('gh_path', '');
+    $('#gh-token').value = LS.get('gh_token', '');
+    $('#st-auto').checked = !!S.set.autoSave; $('#st-split').checked = !!S.set.splitPunct; $('#st-blank').checked = !!S.set.blankBreak;
+    $('#st-exc').value = S.set.exceptions || ''; $('#gh-result').textContent = '';
+    $('#st-offline').textContent = ('serviceWorker' in navigator && navigator.serviceWorker.controller) ? '✓ ઓફલાઇન મોડ તૈયાર છે (એપ ફાઇલો ડિવાઇસ પર સેવ છે).' : 'ઓફલાઇન મોડ માટે એપ એક વાર ઇન્ટરનેટ સાથે (https/GitHub Pages પર) ખોલો અને પેજ રીફ્રેશ કરો.';
+    dSet.showModal();
+  }
+  function readGhFields() {
+    LS.set('gh_user', $('#gh-user').value.trim()); LS.set('gh_repo', $('#gh-repo').value.trim());
+    LS.set('gh_branch', $('#gh-branch').value.trim()); LS.set('gh_path', $('#gh-path').value.trim());
+    LS.set('gh_token', $('#gh-token').value.trim());
+  }
+  el.settingsbtn.onclick = openSettings;
+  $('#gh-test').onclick = async () => {
+    readGhFields();
+    const out = $('#gh-result');
+    if (!ghOn()) { out.textContent = 'Username, Repo અને Token ભરો.'; return; }
+    out.textContent = 'ચકાસી રહ્યા છીએ…';
+    try { const r = await ghGet(); out.textContent = '✓ કનેક્શન સફળ — ફાઇલ મળી (' + parseKirtans(r.text).length + ' કીર્તન)'; }
+    catch (e) { out.textContent = '✗ ' + explain(e); }
+  };
+  $('#set-close').onclick = () => {
+    readGhFields();
+    S.set.autoSave = $('#st-auto').checked; S.set.splitPunct = $('#st-split').checked; S.set.blankBreak = $('#st-blank').checked;
+    S.set.exceptions = $('#st-exc').value; USER_EXC = parseExceptions(S.set.exceptions);
+    saveSettings(); dSet.close(); F.err = ''; F.conflict = false;
+    rebuildSlides(false); refreshSync();
+    if (ghOn()) { if (S.dirty) schedulePush(300); else syncDown(); }
+  };
+  $('#st-export').onclick = () => {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([serialize()], { type: 'text/plain;charset=utf-8' }));
+    a.download = 'kirtans.txt'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  };
+  $('#st-import').onclick = () => $('#st-file').click();
+  $('#st-file').onchange = async e => {
+    const f = e.target.files[0]; if (!f) return;
+    const list = parseKirtans(await f.text());
+    if (!list.length) { toast('ફાઇલમાં કીર્તન મળ્યા નહીં'); return; }
+    if (!confirm(list.length + ' કીર્તન મળ્યા. હાલની યાદી બદલવી છે?')) return;
+    adopt(await f.text()); markDirty(); dSet.close(); toast('✓ ' + list.length + ' કીર્તન લોડ થયા');
+    e.target.value = '';
+  };
+
+  /* ----- LED વિન્ડો (એક્સટેન્ડ સ્ક્રીન હોય તો ત્યાં, નહીં તો આ જ સ્ક્રીન પર) ----- */
+  async function openLed() {
+    if (ledWin && !ledWin.closed) { ledWin.focus(); return; }
+    const url = location.href.split('#')[0] + '#led';
+    let feat = 'popup=yes,width=1280,height=720,left=80,top=60';
+    let ext = null;
+    try {
+      if (window.screen && window.screen.isExtended && 'getScreenDetails' in window) {
+        const d = await window.getScreenDetails();
+        ext = d.screens.find(s => s !== d.currentScreen) || null;
+      }
+    } catch (err) { toast('એક્સટેન્ડ સ્ક્રીનની પરવાનગી મળી નથી — આ સ્ક્રીન પર ખોલ્યું'); }
+    if (ext) feat = `popup=yes,left=${ext.availLeft},top=${ext.availTop},width=${ext.availWidth},height=${ext.availHeight}`;
+    ledWin = window.open(url, 'kirtan-led', feat);
+    if (!ledWin) { toast('પોપ-અપ બ્લોક થયું — બ્રાઉઝરમાં પોપ-અપ મંજૂર કરી ફરી ક્લિક કરો', { ms: 6000 }); return; }
+    toast(ext ? 'LED વ્યૂ એક્સટેન્ડ સ્ક્રીન પર ખુલ્યું — ફુલસ્ક્રીન માટે તેમાં ક્લિક કરો' : 'LED વ્યૂ ખુલ્યું — ફુલસ્ક્રીન માટે તેમાં ક્લિક કરો', { ms: 5000 });
+    setTimeout(pushLed, 400);
+  }
+  el.openled.onclick = openLed;
+  if (bc) bc.onmessage = e => {
+    if (!e.data) return;
+    if (e.data.type === 'led-ping') lastPing = Date.now();
+    if (e.data.type === 'led-hello') { lastPing = Date.now(); pushLed(); }
+  };
+  setInterval(() => {
+    const on = Date.now() - lastPing < 4500;
+    el.ledchip.classList.toggle('on', on);
+    el.ledchip.lastChild.textContent = on ? 'LED જોડાયેલ' : 'LED બંધ';
+  }, 1000);
+
+  /* ----- ટેબ (મોબાઇલ) ----- */
+  function setTab(t) { el.grid.dataset.tab = t; el.tabbar.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.tab === t)); }
+  el.tabbar.addEventListener('click', e => { const b = e.target.closest('button'); if (b) setTab(b.dataset.tab); });
+
+  /* ----- કીબોર્ડ ----- */
+  document.addEventListener('keydown', e => {
+    const tag = (e.target.tagName || '').toLowerCase();
+    if (tag === 'input' || tag === 'textarea' || tag === 'select' || document.querySelector('dialog[open]')) return;
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { e.preventDefault(); next(); }
+    else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); prev(); }
+    else if (e.key === 'Home') { e.preventDefault(); goSlide(0); }
+    else if (e.key === 'End') { e.preventDefault(); goSlide(S.slides.length - 1); }
+    else if (e.key === 'b' || e.key === 'B' || e.key === '.') { e.preventDefault(); toggleBlank(); }
+    else if (e.key === '/') { e.preventDefault(); el.search.focus(); }
+  });
+  [dEdit, dSet, dConf].forEach(d => d.addEventListener('click', e => { if (e.target === d && d !== dConf) d.close(); }));
+
+  /* ----- શરૂઆત ----- */
+  (function init() {
+    const cache = LS.getJSON('kc_cache', null);
+    if (cache && Array.isArray(cache.kirtans)) { S.kirtans = cache.kirtans; S.sha = cache.sha || null; S.dirty = !!cache.dirty; }
+    const st0 = LS.getJSON('kc_state', null);
+    if (st0) {
+      S.queue = (st0.queue || []).filter(id => byId(id));
+      if (st0.live && st0.live.title != null) { S.live = st0.live; S.slides = makeSlides(S.live.title, S.live.content); S.idx = Math.min(st0.idx | 0, S.slides.length - 1); S.blank = !!st0.blank; }
+    }
+    syncQuick(); renderList(); renderQueue(); renderSlideList(); renderStage(); refreshSync();
+    pushLed();
+    if (!ghOn() && !LS.get('kc_hint_gh', '')) { LS.set('kc_hint_gh', '1'); setTimeout(() => toast('ઓટો-સેવ માટે ⚙ સેટિંગ્સમાં GitHub જોડો', { label: 'ખોલો', onClick: openSettings, ms: 7000 }), 1200); }
+    syncDown().then(() => { if (S.dirty) schedulePush(1500); });
+  })();
+
+  /* ઓફલાઇન માટે service worker */
+  if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  }
+}
+
+if (IS_LED) startLed(); else startController();
+</script>
 </body>
 </html>
