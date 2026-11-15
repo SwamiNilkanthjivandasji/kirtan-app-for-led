@@ -626,9 +626,18 @@ function startController() {
     clearTimeout(cacheTimer);
     cacheTimer = setTimeout(persistCacheNow, 250);
   }
+  /* ઓફલાઇન કેશ IndexedDB માં (localStorage ~5MB સુધી જ; મોટી kirtans.txt માટે અપૂરતું) */
+  const IDB = {
+    db: null,
+    open() { return new Promise((res, rej) => { if (!('indexedDB' in window)) return rej(new Error('noidb')); const r = indexedDB.open('kirtan-controller', 1); r.onupgradeneeded = () => r.result.createObjectStore('kv'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }); },
+    async get(k) { const db = this.db || (this.db = await this.open()); return new Promise((res, rej) => { const q = db.transaction('kv').objectStore('kv').get(k); q.onsuccess = () => res(q.result); q.onerror = () => rej(q.error); }); },
+    async set(k, v) { const db = this.db || (this.db = await this.open()); return new Promise((res, rej) => { const tx = db.transaction('kv', 'readwrite'); tx.objectStore('kv').put(v, k); tx.oncomplete = () => res(); tx.onerror = () => rej(tx.error); tx.onabort = () => rej(tx.error); }); }
+  };
   function persistCacheNow() {
-    const ok = LS.setJSON('kc_cache', { kirtans: S.kirtans, sha: S.sha, dirty: S.dirty });
-    if (!ok && !quotaWarned) { quotaWarned = true; toast('⚠ ડિવાઇસ સ્ટોરેજ ભરાઈ ગયું — ઓફલાઇન કેશ સેવ ન થયો', { ms: 6000 }); }
+    const data = { kirtans: S.kirtans, sha: S.sha, dirty: S.dirty };
+    IDB.set('kc_cache', data).then(() => { try { localStorage.removeItem('kc_cache'); } catch (e) {} }).catch(() => {
+      if (!LS.setJSON('kc_cache', data) && !quotaWarned) { quotaWarned = true; toast('⚠ ઓફલાઇન કેશ સેવ ન થયો — બ્રાઉઝર સ્ટોરેજ મંજૂર નથી/ભરાયેલું છે', { ms: 6000 }); }
+    });
   }
   function saveState() { LS.setJSON('kc_state', { queue: S.queue, live: S.live, idx: S.idx, blank: S.blank }); }
 
@@ -1116,8 +1125,10 @@ function startController() {
   [dEdit, dSet, dConf].forEach(d => d.addEventListener('click', e => { if (e.target === d && d !== dConf) d.close(); }));
 
   /* ----- શરૂઆત ----- */
-  (function init() {
-    const cache = LS.getJSON('kc_cache', null);
+  (async function init() {
+    let cache = null;
+    try { cache = await IDB.get('kc_cache'); } catch (e) {}
+    if (!cache) cache = LS.getJSON('kc_cache', null);
     if (cache && Array.isArray(cache.kirtans)) { S.kirtans = cache.kirtans; S.sha = cache.sha || null; S.dirty = !!cache.dirty; }
     const st0 = LS.getJSON('kc_state', null);
     if (st0) {
